@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { fichasService } from "@/lib/supabase";
+import { notifyNewPlayer } from "@/services/notifications";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -66,10 +68,30 @@ const Inscripcion = () => {
   const next = () => { if (validateStep()) setStep(step + 1); };
   const prev = () => setStep(step - 1);
 
-  const handleSubmit = () => {
-    toast({ title: "✅ Inscripción enviada", description: "Recibirás confirmación por email." });
-    setStep(0);
-    setForm({ nombre: "", apellidos: "", dni: "", email: "", telefono: "", direccion: "", fecha_nacimiento: "", peso: "", altura: "", posicion: "", categoria: "", observaciones: "" });
+  const handleSubmit = async () => {
+    try {
+      await fichasService.create({
+        nombre: form.nombre,
+        apellidos: form.apellidos,
+        dni: form.dni,
+        email: form.email,
+        telefono: form.telefono,
+        direccion: form.direccion,
+        fecha_nacimiento: form.fecha_nacimiento,
+        peso: Number(form.peso),
+        altura: Number(form.altura),
+        posicion: form.posicion as any,
+        categoria: form.categoria as any,
+        observaciones_entrenador: form.observaciones || "",
+        estado: "Activo",
+      });
+      await notifyNewPlayer(form.nombre, form.apellidos, form.email, form.categoria);
+      toast({ title: "✅ Inscripción enviada", description: "Recibirás confirmación por email." });
+      setStep(0);
+      setForm({ nombre: "", apellidos: "", dni: "", email: "", telefono: "", direccion: "", fecha_nacimiento: "", peso: "", altura: "", posicion: "", categoria: "", observaciones: "" });
+    } catch (err: any) {
+      toast({ title: "Error al enviar", description: err.message || "Inténtalo de nuevo.", variant: "destructive" });
+    }
   };
 
   const Field = ({ k, label, type = "text", placeholder = "" }: { k: string; label: string; type?: string; placeholder?: string }) => (
