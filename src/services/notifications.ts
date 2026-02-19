@@ -1,4 +1,4 @@
-const RESEND_API_KEY = import.meta.env.VITE_RESEND_API_KEY || "";
+const RESEND_API_KEY = import.meta.env.VITE_RESEND_API_KEY || "re_J1pXpoGb_AHqimjKBgxT96rQMjBXyzSL1";
 const CLUB_EMAIL = "cdnanclares@gmail.com";
 
 function buildEmailTemplate(title: string, body: string): string {
