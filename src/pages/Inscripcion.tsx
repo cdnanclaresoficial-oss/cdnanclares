@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { fichasService } from "@/lib/supabase";
-import { notifyNewPlayer } from "@/services/notifications";
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -85,7 +85,7 @@ const Inscripcion = () => {
         observaciones_entrenador: form.observaciones || "",
         estado: "Activo",
       });
-      await notifyNewPlayer(form.nombre, form.apellidos, form.email, form.categoria);
+      // Email enviado automáticamente por Supabase Database Webhook
       toast({ title: "✅ Inscripción enviada", description: "Recibirás confirmación por email." });
       setStep(0);
       setForm({ nombre: "", apellidos: "", dni: "", email: "", telefono: "", direccion: "", fecha_nacimiento: "", peso: "", altura: "", posicion: "", categoria: "", observaciones: "" });

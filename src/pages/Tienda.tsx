@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ShoppingCart, Plus, Minus, X } from "lucide-react";
 import { pedidosService } from "@/lib/supabase";
-import { notifyNewOrder } from "@/services/notifications";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -71,7 +71,7 @@ const Tienda = () => {
         estado_pedido: "Pendiente",
         total_estimado: total,
       });
-      await notifyNewOrder(`${formData.nombre} ${formData.apellidos}`, formData.email, total);
+      // Email enviado automáticamente por Supabase Database Webhook
       toast({ title: "✅ Pedido enviado", description: "Te enviaremos confirmación por email." });
       setCarrito([]);
       setShowCheckout(false);
