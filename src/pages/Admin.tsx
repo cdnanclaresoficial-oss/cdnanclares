@@ -7,6 +7,8 @@ import { fichasService, pedidosService, authService } from "@/lib/supabase";
 import AdminLogin from "@/components/admin/AdminLogin";
 import PlayersTab from "@/components/admin/PlayersTab";
 import OrdersTab from "@/components/admin/OrdersTab";
+import DashboardTab from "@/components/admin/DashboardTab";
+import AnalystChat from "@/components/admin/AnalystChat";
 import type { FichaJugador, PedidoRopa } from "@/types";
 
 const Admin = () => {
@@ -17,7 +19,6 @@ const Admin = () => {
   const [pedidos, setPedidos] = useState<PedidoRopa[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Check existing session on mount
   useEffect(() => {
     authService.getSession().then((session) => {
       setIsLoggedIn(!!session);
@@ -76,8 +77,11 @@ const Admin = () => {
       </section>
 
       <div className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="jugadores">
+        <Tabs defaultValue="dashboard">
           <TabsList className="mb-6">
+            <TabsTrigger value="dashboard" className="font-heading uppercase tracking-wider">
+              Dashboard
+            </TabsTrigger>
             <TabsTrigger value="jugadores" className="font-heading uppercase tracking-wider">
               Jugadores ({jugadores.length})
             </TabsTrigger>
@@ -85,6 +89,10 @@ const Admin = () => {
               Pedidos ({pedidos.length})
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="dashboard">
+            <DashboardTab jugadores={jugadores} />
+          </TabsContent>
 
           <TabsContent value="jugadores">
             <PlayersTab jugadores={jugadores} onRefresh={fetchData} />
@@ -95,6 +103,9 @@ const Admin = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Chatbot */}
+      <AnalystChat />
     </main>
   );
 };

@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { fichasService } from "@/lib/supabase";
-
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,19 +29,57 @@ const fichaSchema = z.object({
   categoria: z.string().min(1, "Selecciona categoría"),
 });
 
+/* Stable field component — defined outside to avoid re-creation */
+const FormField = ({
+  k,
+  label,
+  type = "text",
+  placeholder = "",
+  value,
+  error,
+  onChange,
+}: {
+  k: string;
+  label: string;
+  type?: string;
+  placeholder?: string;
+  value: string;
+  error?: string;
+  onChange: (key: string, val: string) => void;
+}) => (
+  <div>
+    <Label className="text-sm font-semibold text-primary">{label}</Label>
+    <Input
+      type={type}
+      placeholder={placeholder}
+      value={value}
+      onChange={(e) => onChange(k, e.target.value)}
+      className={error ? "border-destructive" : ""}
+    />
+    {error && <p className="text-xs text-destructive mt-1">{error}</p>}
+  </div>
+);
+
+const INITIAL_FORM = {
+  nombre: "", apellidos: "", dni: "", email: "", telefono: "", direccion: "",
+  fecha_nacimiento: "", peso: "", altura: "", posicion: "", categoria: "", observaciones: "",
+};
+
 const Inscripcion = () => {
   const { toast } = useToast();
   const [step, setStep] = useState(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [form, setForm] = useState({
-    nombre: "", apellidos: "", dni: "", email: "", telefono: "", direccion: "",
-    fecha_nacimiento: "", peso: "", altura: "", posicion: "", categoria: "", observaciones: "",
-  });
+  const [form, setForm] = useState(INITIAL_FORM);
 
-  const set = (key: string, val: string) => {
-    setForm({ ...form, [key]: val });
-    setErrors((e) => ({ ...e, [key]: "" }));
-  };
+  const set = useCallback((key: string, val: string) => {
+    setForm((prev) => ({ ...prev, [key]: val }));
+    setErrors((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  }, []);
 
   const validateStep = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -85,22 +122,13 @@ const Inscripcion = () => {
         observaciones_entrenador: form.observaciones || "",
         estado: "Activo",
       });
-      // Email enviado automáticamente por Supabase Database Webhook
       toast({ title: "✅ Inscripción enviada", description: "Recibirás confirmación por email." });
       setStep(0);
-      setForm({ nombre: "", apellidos: "", dni: "", email: "", telefono: "", direccion: "", fecha_nacimiento: "", peso: "", altura: "", posicion: "", categoria: "", observaciones: "" });
+      setForm(INITIAL_FORM);
     } catch (err: any) {
       toast({ title: "Error al enviar", description: err.message || "Inténtalo de nuevo.", variant: "destructive" });
     }
   };
-
-  const Field = ({ k, label, type = "text", placeholder = "" }: { k: string; label: string; type?: string; placeholder?: string }) => (
-    <div>
-      <Label className="text-sm font-semibold text-primary">{label}</Label>
-      <Input type={type} placeholder={placeholder} value={(form as any)[k]} onChange={(e) => set(k, e.target.value)} className={errors[k] ? "border-destructive" : ""} />
-      {errors[k] && <p className="text-xs text-destructive mt-1">{errors[k]}</p>}
-    </div>
-  );
 
   return (
     <main className="pt-20 min-h-screen bg-background">
@@ -131,21 +159,21 @@ const Inscripcion = () => {
           {step === 0 && (
             <div className="grid gap-4">
               <div className="grid sm:grid-cols-2 gap-4">
-                <Field k="nombre" label="Nombre" />
-                <Field k="apellidos" label="Apellidos" />
+                <FormField k="nombre" label="Nombre" value={form.nombre} error={errors.nombre} onChange={set} />
+                <FormField k="apellidos" label="Apellidos" value={form.apellidos} error={errors.apellidos} onChange={set} />
               </div>
-              <Field k="dni" label="DNI" placeholder="12345678A" />
-              <Field k="email" label="Email" type="email" />
-              <Field k="telefono" label="Teléfono" type="tel" />
-              <Field k="direccion" label="Dirección" />
-              <Field k="fecha_nacimiento" label="Fecha de Nacimiento" type="date" />
+              <FormField k="dni" label="DNI" placeholder="12345678A" value={form.dni} error={errors.dni} onChange={set} />
+              <FormField k="email" label="Email" type="email" value={form.email} error={errors.email} onChange={set} />
+              <FormField k="telefono" label="Teléfono" type="tel" value={form.telefono} error={errors.telefono} onChange={set} />
+              <FormField k="direccion" label="Dirección" value={form.direccion} error={errors.direccion} onChange={set} />
+              <FormField k="fecha_nacimiento" label="Fecha de Nacimiento" type="date" value={form.fecha_nacimiento} error={errors.fecha_nacimiento} onChange={set} />
             </div>
           )}
 
           {step === 1 && (
             <div className="grid sm:grid-cols-2 gap-4">
-              <Field k="peso" label="Peso (kg)" type="number" placeholder="70" />
-              <Field k="altura" label="Altura (cm)" type="number" placeholder="175" />
+              <FormField k="peso" label="Peso (kg)" type="number" placeholder="70" value={form.peso} error={errors.peso} onChange={set} />
+              <FormField k="altura" label="Altura (cm)" type="number" placeholder="175" value={form.altura} error={errors.altura} onChange={set} />
             </div>
           )}
 
@@ -205,7 +233,6 @@ const Inscripcion = () => {
             </div>
           )}
 
-          {/* Navigation */}
           <div className="flex justify-between mt-8">
             {step > 0 ? (
               <Button variant="outline" onClick={prev} className="font-heading uppercase tracking-wider">Anterior</Button>
