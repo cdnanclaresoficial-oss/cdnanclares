@@ -30,17 +30,18 @@ const AnalystChat = () => {
     setLoading(true);
 
     try {
-      // Replace YOUR_PROJECT_ID with actual Supabase project ID
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://rwqbrwpzgjhkgnkqtlab.supabase.co";
-      const res = await fetch(`${supabaseUrl}/functions/v1/analista-nanclares`, {
+      const res = await fetch("https://rwqbrwpzgjhkgnkqtlab.supabase.co/functions/v1/analista-nanclares", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY || ""}` },
-        body: JSON.stringify({ messages: [...messages, userMsg].map((m) => ({ role: m.role, content: m.content })) }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3cWJyd3B6Z2poa2dua3F0bGFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0OTQwNzUsImV4cCI6MjA4NzA3MDA3NX0.yFCMPJISmJK_BPZ82vKtZzwTY_d-xzOaK3_5VmgCegE`,
+        },
+        body: JSON.stringify({ query: text }),
       });
       const data = await res.json();
-      setMessages((prev) => [...prev, { role: "assistant", content: data.reply || data.message || "Sin respuesta." }]);
+      setMessages((prev) => [...prev, { role: "assistant", content: data.answer || "El analista no ha devuelto respuesta." }]);
     } catch {
-      setMessages((prev) => [...prev, { role: "assistant", content: "Error al conectar con el analista. Verifica la Edge Function." }]);
+      setMessages((prev) => [...prev, { role: "assistant", content: "No se pudo conectar con el analista." }]);
     } finally {
       setLoading(false);
     }
