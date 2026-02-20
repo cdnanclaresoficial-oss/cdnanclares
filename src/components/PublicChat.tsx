@@ -1,0 +1,137 @@
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { MessageCircle, X, Send, Bot, User } from "lucide-react";
+import logoCdn from "@/assets/logo-cdn.jpg";
+
+interface Message {
+  role: "user" | "assistant";
+  content: string;
+}
+
+const PublicChat = () => {
+  const [open, setOpen] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([
+    { role: "assistant", content: "¡Hola! Soy el asistente del C.D. Nanclares. ¿En qué puedo ayudarte?" },
+  ]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
+
+  const handleSend = useCallback(async () => {
+    const text = input.trim();
+    if (!text || loading) return;
+    setMessages((prev) => [...prev, { role: "user", content: text }]);
+    setInput("");
+    setLoading(true);
+
+    try {
+      const res = await fetch("https://rwqbrwpzgjhkgnkqtlab.supabase.co/functions/v1/analista-nanclares", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3cWJyd3B6Z2poa2dua3F0bGFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0OTQwNzUsImV4cCI6MjA4NzA3MDA3NX0.yFCMPJISmJK_BPZ82vKtZzwTY_d-xzOaK3_5VmgCegE`,
+        },
+        body: JSON.stringify({ query: text, modo: "publico" }),
+      });
+      const data = await res.json();
+      setMessages((prev) => [...prev, { role: "assistant", content: data.answer || "No he podido procesar tu consulta." }]);
+    } catch {
+      setMessages((prev) => [...prev, { role: "assistant", content: "Error de conexión. Inténtalo de nuevo." }]);
+    } finally {
+      setLoading(false);
+    }
+  }, [input, loading]);
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className="fixed bottom-6 right-6 z-50 h-16 w-16 rounded-full bg-primary shadow-xl flex items-center justify-center hover:scale-110 transition-transform ring-4 ring-primary/20"
+        aria-label="Abrir chat"
+      >
+        <img src={logoCdn} alt="CDN" className="h-10 w-10 rounded-full object-cover" />
+      </button>
+    );
+  }
+
+  return (
+    <div className="fixed bottom-6 right-6 z-50 w-[400px] max-w-[calc(100vw-2rem)] h-[540px] flex flex-col bg-card border border-border rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 fade-in duration-300">
+      {/* Header */}
+      <div className="bg-primary px-5 py-4 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-3">
+          <img src={logoCdn} alt="CDN" className="h-9 w-9 rounded-full object-cover ring-2 ring-primary-foreground/20" />
+          <div>
+            <p className="font-heading text-sm font-bold text-primary-foreground uppercase tracking-wider">C.D. Nanclares</p>
+            <p className="text-xs text-primary-foreground/50">Asistente virtual</p>
+          </div>
+        </div>
+        <button onClick={() => setOpen(false)} className="text-primary-foreground/60 hover:text-primary-foreground transition-colors">
+          <X size={20} />
+        </button>
+      </div>
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 scroll-smooth">
+        {messages.map((m, i) => (
+          <div key={i} className={`flex gap-2.5 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+            {m.role === "assistant" && (
+              <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                <Bot size={14} className="text-primary" />
+              </div>
+            )}
+            <div
+              className={`max-w-[78%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                m.role === "user"
+                  ? "bg-primary text-primary-foreground rounded-br-md"
+                  : "bg-muted text-foreground rounded-bl-md"
+              }`}
+            >
+              {m.content}
+            </div>
+            {m.role === "user" && (
+              <div className="h-7 w-7 rounded-full bg-secondary/10 flex items-center justify-center shrink-0 mt-0.5">
+                <User size={14} className="text-secondary" />
+              </div>
+            )}
+          </div>
+        ))}
+        {loading && (
+          <div className="flex gap-2.5 items-start">
+            <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <Bot size={14} className="text-primary" />
+            </div>
+            <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-2.5 text-sm text-muted-foreground">
+              <span className="inline-flex gap-1">
+                <span className="animate-bounce" style={{ animationDelay: "0ms" }}>●</span>
+                <span className="animate-bounce" style={{ animationDelay: "150ms" }}>●</span>
+                <span className="animate-bounce" style={{ animationDelay: "300ms" }}>●</span>
+              </span>
+            </div>
+          </div>
+        )}
+        <div ref={bottomRef} />
+      </div>
+
+      {/* Input */}
+      <div className="border-t border-border p-3 flex gap-2 shrink-0 bg-card">
+        <Input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleSend()}
+          placeholder="Escribe tu pregunta..."
+          className="text-sm rounded-xl"
+        />
+        <Button size="icon" onClick={handleSend} disabled={loading || !input.trim()} className="shrink-0 rounded-xl">
+          <Send size={16} />
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+export default PublicChat;

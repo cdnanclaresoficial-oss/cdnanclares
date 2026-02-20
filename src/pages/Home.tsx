@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import heroBg from "@/assets/hero-bg.jpg";
 import ClubGallery from "@/components/ClubGallery";
+import PublicChat from "@/components/PublicChat";
 
 const Home = () => {
   return (
@@ -74,6 +75,8 @@ const Home = () => {
           © {new Date().getFullYear()} Club Deportivo Nanclares de la Oca. Todos los derechos reservados.
         </p>
       </footer>
+
+      <PublicChat />
     </main>
   );
 };

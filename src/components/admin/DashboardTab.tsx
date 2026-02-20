@@ -2,12 +2,13 @@ import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell } from "recharts";
-import { Users, UserCheck, ShoppingBag } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, LineChart, Line, ResponsiveContainer } from "recharts";
+import { Users, UserCheck, ShoppingBag, TrendingUp } from "lucide-react";
 import type { FichaJugador, PedidoRopa, Categoria } from "@/types";
 
 const CATEGORIAS: Categoria[] = ["Prebenjamín", "Benjamín", "Alevín", "Infantil", "Cadete", "Juvenil", "Senior", "Veteranos"];
-const PIE_COLORS = ["hsl(142, 71%, 45%)", "hsl(0, 0%, 60%)"];
+const PIE_COLORS = ["hsl(142, 71%, 45%)", "hsl(45, 93%, 47%)", "hsl(0, 72%, 51%)"];
+const BAR_COLOR = "hsl(var(--primary))";
 
 interface DashboardTabProps {
   jugadores: FichaJugador[];
@@ -28,6 +29,7 @@ const DashboardTab = ({ jugadores, pedidos }: DashboardTabProps) => {
     });
   }, [jugadores, filterCat, filterEstado, filterPos]);
 
+  // 1. Bar chart: jugadores por categoría (datos reales)
   const barData = useMemo(() => {
     const counts: Record<string, number> = {};
     CATEGORIAS.forEach((c) => (counts[c] = 0));
@@ -35,21 +37,32 @@ const DashboardTab = ({ jugadores, pedidos }: DashboardTabProps) => {
     return CATEGORIAS.map((c) => ({ name: c, total: counts[c] }));
   }, [filtered]);
 
-  const pieData = useMemo(() => {
-    const activos = filtered.filter((j) => j.estado === "Activo").length;
-    const bajas = filtered.length - activos;
-    return [
-      { name: "Activo", value: activos },
-      { name: "Baja", value: bajas },
-    ];
-  }, [filtered]);
+  // 2. Pie chart: estado pedidos (Pendiente / Preparado / Entregado)
+  const pedidosPieData = useMemo(() => {
+    const counts: Record<string, number> = { Pendiente: 0, Preparado: 0, Entregado: 0 };
+    pedidos.forEach((p) => { counts[p.estado_pedido] = (counts[p.estado_pedido] || 0) + 1; });
+    return Object.entries(counts)
+      .map(([name, value]) => ({ name, value }))
+      .filter((d) => d.value > 0);
+  }, [pedidos]);
+
+  // 3. Line chart: evolución de inscripciones por mes (datos reales de created_at)
+  const evolutionData = useMemo(() => {
+    const months: Record<string, number> = {};
+    jugadores.forEach((j) => {
+      const d = new Date(j.created_at);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      months[key] = (months[key] || 0) + 1;
+    });
+    return Object.entries(months)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([mes, total]) => ({ mes, total }));
+  }, [jugadores]);
 
   const totalInscritos = jugadores.length;
   const jugadoresActivos = jugadores.filter((j) => j.estado === "Activo").length;
   const pedidosPendientes = pedidos.filter((p) => p.estado_pedido === "Pendiente").length;
-
   const posiciones = useMemo(() => [...new Set(jugadores.map((j) => j.posicion))].sort(), [jugadores]);
-
   const hasData = jugadores.length > 0;
 
   return (
@@ -114,33 +127,73 @@ const DashboardTab = ({ jugadores, pedidos }: DashboardTabProps) => {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="lg:col-span-2">
-            <CardHeader><CardTitle className="font-heading text-lg uppercase tracking-wide">Jugadores por Categoría</CardTitle></CardHeader>
-            <CardContent>
-              <ChartContainer config={{ total: { label: "Jugadores", color: "hsl(var(--primary))" } }} className="h-[300px] w-full">
-                <BarChart data={barData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="name" tick={{ fontSize: 11 }} angle={-30} textAnchor="end" height={60} />
-                  <YAxis allowDecimals={false} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
+        <div className="space-y-6">
+          {/* Row 1: Bar + Pie */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <Card className="lg:col-span-2">
+              <CardHeader><CardTitle className="font-heading text-lg uppercase tracking-wide">Jugadores por Categoría</CardTitle></CardHeader>
+              <CardContent>
+                <ChartContainer config={{ total: { label: "Jugadores", color: BAR_COLOR } }} className="h-[300px] w-full">
+                  <BarChart data={barData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="name" tick={{ fontSize: 11 }} angle={-30} textAnchor="end" height={60} />
+                    <YAxis allowDecimals={false} />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Bar dataKey="total" fill={BAR_COLOR} radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ChartContainer>
+              </CardContent>
+            </Card>
 
+            <Card>
+              <CardHeader><CardTitle className="font-heading text-lg uppercase tracking-wide">Estado Pedidos</CardTitle></CardHeader>
+              <CardContent className="flex items-center justify-center">
+                {pedidosPieData.length > 0 ? (
+                  <ChartContainer
+                    config={{
+                      Pendiente: { label: "Pendiente", color: PIE_COLORS[0] },
+                      Preparado: { label: "Preparado", color: PIE_COLORS[1] },
+                      Entregado: { label: "Entregado", color: PIE_COLORS[2] },
+                    }}
+                    className="h-[250px] w-full"
+                  >
+                    <PieChart>
+                      <Pie data={pedidosPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={55} outerRadius={90} paddingAngle={4} label={({ name, value }) => `${name}: ${value}`}>
+                        {pedidosPieData.map((entry, i) => (
+                          <Cell key={entry.name} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                    </PieChart>
+                  </ChartContainer>
+                ) : (
+                  <p className="text-muted-foreground text-sm">Sin pedidos aún</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Row 2: Evolution line chart */}
           <Card>
-            <CardHeader><CardTitle className="font-heading text-lg uppercase tracking-wide">Estado de Fichas</CardTitle></CardHeader>
-            <CardContent className="flex items-center justify-center">
-              <ChartContainer config={{ Activo: { label: "Activo", color: PIE_COLORS[0] }, Baja: { label: "Baja", color: PIE_COLORS[1] } }} className="h-[250px] w-full">
-                <PieChart>
-                  <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={55} outerRadius={90} paddingAngle={4} label={({ name, value }) => `${name}: ${value}`}>
-                    {pieData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i]} />)}
-                  </Pie>
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                </PieChart>
-              </ChartContainer>
+            <CardHeader>
+              <CardTitle className="font-heading text-lg uppercase tracking-wide flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" /> Evolución de Inscripciones
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {evolutionData.length > 1 ? (
+                <ChartContainer config={{ total: { label: "Inscripciones", color: BAR_COLOR } }} className="h-[280px] w-full">
+                  <LineChart data={evolutionData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="mes" tick={{ fontSize: 11 }} />
+                    <YAxis allowDecimals={false} />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Line type="monotone" dataKey="total" stroke={BAR_COLOR} strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                  </LineChart>
+                </ChartContainer>
+              ) : (
+                <p className="text-muted-foreground text-sm text-center py-8">Se necesitan datos de al menos 2 meses para mostrar la evolución.</p>
+              )}
             </CardContent>
           </Card>
         </div>

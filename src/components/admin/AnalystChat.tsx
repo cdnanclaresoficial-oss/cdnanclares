@@ -36,7 +36,7 @@ const AnalystChat = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3cWJyd3B6Z2poa2dua3F0bGFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0OTQwNzUsImV4cCI6MjA4NzA3MDA3NX0.yFCMPJISmJK_BPZ82vKtZzwTY_d-xzOaK3_5VmgCegE`,
         },
-        body: JSON.stringify({ query: text }),
+        body: JSON.stringify({ query: text, modo: "admin" }),
       });
       const data = await res.json();
       setMessages((prev) => [...prev, { role: "assistant", content: data.answer || "El analista no ha devuelto respuesta." }]);
