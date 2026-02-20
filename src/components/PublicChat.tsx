@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Send, Bot, User, Maximize2, Minimize2 } from "lucide-react";
+import { X, Send, User, Maximize2, Minimize2 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import logoCdn from "@/assets/logo-cdn.jpg";
+import { supabase } from "@/lib/supabase";
 
 interface Message {
   role: "user" | "assistant";
@@ -21,7 +23,24 @@ const PublicChat = ({ autoOpen = false }: PublicChatProps) => {
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [personality, setPersonality] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const fetchPersonality = async () => {
+      try {
+        const { data } = await supabase
+          .from("club_config")
+          .select("valor")
+          .eq("clave", "asistente_personalidad")
+          .single();
+        if (data?.valor) setPersonality(data.valor);
+      } catch (err) {
+        console.error("Error fetching asistente_personalidad:", err);
+      }
+    };
+    fetchPersonality();
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -41,7 +60,11 @@ const PublicChat = ({ autoOpen = false }: PublicChatProps) => {
           "Content-Type": "application/json",
           Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3cWJyd3B6Z2poa2dua3F0bGFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0OTQwNzUsImV4cCI6MjA4NzA3MDA3NX0.yFCMPJISmJK_BPZ82vKtZzwTY_d-xzOaK3_5VmgCegE`,
         },
-        body: JSON.stringify({ query: text, modo: "publico" }),
+        body: JSON.stringify({
+          query: text,
+          modo: "publico",
+          ...(personality ? { system_prompt: personality } : {}),
+        }),
       });
       const data = await res.json();
       setMessages((prev) => [...prev, { role: "assistant", content: data.answer || "No he podido procesar tu consulta." }]);
@@ -50,7 +73,7 @@ const PublicChat = ({ autoOpen = false }: PublicChatProps) => {
     } finally {
       setLoading(false);
     }
-  }, [input, loading]);
+  }, [input, loading, personality]);
 
   if (!open) {
     return (
@@ -109,7 +132,17 @@ const PublicChat = ({ autoOpen = false }: PublicChatProps) => {
                   : "bg-muted text-foreground rounded-bl-md"
               }`}
             >
-              {m.content}
+              <ReactMarkdown
+                components={{
+                  p: ({ children }) => <p className="mb-1 last:mb-0">{children}</p>,
+                  strong: ({ children }) => <strong className="font-bold">{children}</strong>,
+                  ul: ({ children }) => <ul className="list-disc pl-4 mb-1">{children}</ul>,
+                  ol: ({ children }) => <ol className="list-decimal pl-4 mb-1">{children}</ol>,
+                  li: ({ children }) => <li className="mb-0.5">{children}</li>,
+                }}
+              >
+                {m.content}
+              </ReactMarkdown>
             </div>
             {m.role === "user" && (
               <div className="h-8 w-8 rounded-full bg-secondary/10 flex items-center justify-center shrink-0 mt-0.5">
