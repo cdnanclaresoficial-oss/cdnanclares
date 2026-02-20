@@ -15,10 +15,11 @@ const ClubGallery = () => {
   useEffect(() => {
     const fetchImages = async () => {
       try {
-        const { data, error } = await supabase
+        const { data, error, count, status, statusText } = await supabase
           .from("galeria")
-          .select("id, url")
+          .select("id, url", { count: "exact" })
           .order("created_at", { ascending: false });
+        console.log("🖼️ Galería response:", { data, error, count, status, statusText });
         if (error) throw error;
         setImages(data || []);
       } catch (err) {
