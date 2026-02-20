@@ -20,22 +20,23 @@ const AnalystChat = () => {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [personality, setPersonality] = useState<string | null>(null);
+  const [jugadoresContext, setJugadoresContext] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const fetchPersonality = async () => {
+    const fetchConfig = async () => {
       try {
-        const { data } = await supabase
-          .from("club_config")
-          .select("valor")
-          .eq("clave", "asistente_personalidad")
-          .single();
-        if (data?.valor) setPersonality(data.valor);
+        const [personalityRes, jugadoresRes] = await Promise.all([
+          supabase.from("club_config").select("valor").eq("clave", "asistente_analista").single(),
+          supabase.from("fichas_jugadores").select("*"),
+        ]);
+        if (personalityRes.data?.valor) setPersonality(personalityRes.data.valor);
+        if (jugadoresRes.data) setJugadoresContext(JSON.stringify(jugadoresRes.data));
       } catch (err) {
-        console.error("Error fetching asistente_personalidad:", err);
+        console.error("Error fetching analyst config:", err);
       }
     };
-    fetchPersonality();
+    fetchConfig();
   }, []);
 
   useEffect(() => {
@@ -60,6 +61,7 @@ const AnalystChat = () => {
           query: text,
           modo: "admin",
           ...(personality ? { system_prompt: personality } : {}),
+          ...(jugadoresContext ? { jugadores_data: jugadoresContext } : {}),
         }),
       });
       const data = await res.json();
@@ -69,7 +71,7 @@ const AnalystChat = () => {
     } finally {
       setLoading(false);
     }
-  }, [input, loading, personality]);
+  }, [input, loading, personality, jugadoresContext]);
 
   if (!open) {
     return (

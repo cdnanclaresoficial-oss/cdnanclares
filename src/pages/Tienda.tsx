@@ -200,7 +200,7 @@ const Tienda = () => {
         )}
       </div>
 
-      <PublicChat />
+      <PublicChat personalityKey="asistente_tienda" />
     </main>
   );
 };
