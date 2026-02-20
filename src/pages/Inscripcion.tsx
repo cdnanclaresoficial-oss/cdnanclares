@@ -1,12 +1,13 @@
 import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { fichasService } from "@/lib/supabase";
+import { fichasService, supabase } from "@/lib/supabase";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { Check } from "lucide-react";
+import { Check, Camera } from "lucide-react";
 import type { Posicion, Categoria } from "@/types";
 import { z } from "zod";
 
@@ -63,6 +64,7 @@ const FormField = ({
 const INITIAL_FORM = {
   nombre: "", apellidos: "", dni: "", email: "", telefono: "", direccion: "",
   fecha_nacimiento: "", peso: "", altura: "", posicion: "", categoria: "", observaciones: "",
+  foto_url: "",
 };
 
 const Inscripcion = () => {
@@ -70,6 +72,30 @@ const Inscripcion = () => {
   const [step, setStep] = useState(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState(INITIAL_FORM);
+  const [uploading, setUploading] = useState(false);
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `inscripcion_${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("fotos-jugadores")
+        .upload(path, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage
+        .from("fotos-jugadores")
+        .getPublicUrl(path);
+      set("foto_url", urlData.publicUrl);
+      toast({ title: "Foto subida correctamente" });
+    } catch (err: any) {
+      toast({ title: "Error al subir foto", description: err.message, variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const set = useCallback((key: string, val: string) => {
     setForm((prev) => ({ ...prev, [key]: val }));
@@ -121,6 +147,7 @@ const Inscripcion = () => {
         categoria: form.categoria as any,
         observaciones_entrenador: form.observaciones || "",
         estado: "Activo",
+        ...(form.foto_url ? { foto_url: form.foto_url } : {}),
       });
       toast({ title: "✅ Inscripción enviada", description: "Recibirás confirmación por email." });
       setStep(0);
@@ -158,6 +185,23 @@ const Inscripcion = () => {
         <div className="bg-card border border-border rounded-xl p-8 shadow-sm">
           {step === 0 && (
             <div className="grid gap-4">
+              {/* Photo upload */}
+              <div className="flex items-center gap-4">
+                <Avatar className="h-20 w-20">
+                  <AvatarImage src={form.foto_url || undefined} />
+                  <AvatarFallback className="bg-primary text-primary-foreground font-heading text-xl">
+                    {form.nombre?.[0] || "?"}{form.apellidos?.[0] || ""}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <Label htmlFor="photo-inscripcion" className="cursor-pointer inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-secondary transition-colors">
+                    <Camera size={16} />
+                    {uploading ? "Subiendo..." : "Subir foto"}
+                  </Label>
+                  <input id="photo-inscripcion" type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={uploading} />
+                  <p className="text-xs text-muted-foreground mt-1">Opcional</p>
+                </div>
+              </div>
               <div className="grid sm:grid-cols-2 gap-4">
                 <FormField k="nombre" label="Nombre" value={form.nombre} error={errors.nombre} onChange={set} />
                 <FormField k="apellidos" label="Apellidos" value={form.apellidos} error={errors.apellidos} onChange={set} />
