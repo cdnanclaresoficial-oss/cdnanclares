@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageCircle, X, Send, Bot, User } from "lucide-react";
+import { MessageCircle, X, Send, User, Maximize2, Minimize2 } from "lucide-react";
+import logoCdn from "@/assets/logo-cdn.jpg";
 
 interface Message {
   role: "user" | "assistant";
@@ -10,6 +11,7 @@ interface Message {
 
 const AnalystChat = () => {
   const [open, setOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     { role: "assistant", content: "¡Hola! Soy El Analista. Pregúntame sobre jugadores, estadísticas o cualquier dato del club." },
   ]);
@@ -24,8 +26,7 @@ const AnalystChat = () => {
   const handleSend = useCallback(async () => {
     const text = input.trim();
     if (!text || loading) return;
-    const userMsg: Message = { role: "user", content: text };
-    setMessages((prev) => [...prev, userMsg]);
+    setMessages((prev) => [...prev, { role: "user", content: text }]);
     setInput("");
     setLoading(true);
 
@@ -45,7 +46,7 @@ const AnalystChat = () => {
     } finally {
       setLoading(false);
     }
-  }, [input, loading, messages]);
+  }, [input, loading]);
 
   if (!open) {
     return (
@@ -59,15 +60,30 @@ const AnalystChat = () => {
     );
   }
 
+  const containerClass = expanded
+    ? "fixed bottom-0 right-0 z-50 w-[50vw] h-[100vh] flex flex-col bg-card border-l border-border shadow-2xl animate-in slide-in-from-right duration-300"
+    : "fixed bottom-6 right-6 z-50 w-[380px] max-h-[520px] flex flex-col bg-card border border-border rounded-2xl shadow-2xl overflow-hidden animate-scale-in";
+
   return (
-    <div className="fixed bottom-6 right-6 z-50 w-[380px] max-h-[520px] flex flex-col bg-card border border-border rounded-2xl shadow-2xl overflow-hidden animate-scale-in">
+    <div className={containerClass}>
       {/* Header */}
-      <div className="gradient-navy px-4 py-3 flex items-center justify-between">
+      <div className="gradient-navy px-4 py-3 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2">
-          <Bot size={20} className="text-primary-foreground" />
+          <img src={logoCdn} alt="CDN" className="h-7 w-7 rounded-full object-cover ring-1 ring-primary-foreground/20" />
           <span className="font-heading text-sm font-bold text-primary-foreground uppercase tracking-wider">El Analista</span>
         </div>
-        <button onClick={() => setOpen(false)} className="text-primary-foreground/60 hover:text-primary-foreground"><X size={18} /></button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="text-primary-foreground/60 hover:text-primary-foreground p-1 transition-colors"
+            aria-label={expanded ? "Minimizar" : "Expandir"}
+          >
+            {expanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+          </button>
+          <button onClick={() => { setOpen(false); setExpanded(false); }} className="text-primary-foreground/60 hover:text-primary-foreground p-1 transition-colors">
+            <X size={18} />
+          </button>
+        </div>
       </div>
 
       {/* Messages */}
@@ -75,8 +91,8 @@ const AnalystChat = () => {
         {messages.map((m, i) => (
           <div key={i} className={`flex gap-2 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
             {m.role === "assistant" && (
-              <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Bot size={14} className="text-primary" />
+              <div className="h-7 w-7 rounded-full overflow-hidden shrink-0">
+                <img src={logoCdn} alt="CDN" className="h-full w-full object-cover" />
               </div>
             )}
             <div className={`max-w-[75%] rounded-xl px-3 py-2 text-sm leading-relaxed ${
@@ -87,7 +103,7 @@ const AnalystChat = () => {
               {m.content}
             </div>
             {m.role === "user" && (
-              <div className="h-7 w-7 rounded-full bg-secondary/10 flex items-center justify-center flex-shrink-0">
+              <div className="h-7 w-7 rounded-full bg-secondary/10 flex items-center justify-center shrink-0">
                 <User size={14} className="text-secondary" />
               </div>
             )}
@@ -95,8 +111,8 @@ const AnalystChat = () => {
         ))}
         {loading && (
           <div className="flex gap-2 items-center">
-            <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center">
-              <Bot size={14} className="text-primary" />
+            <div className="h-7 w-7 rounded-full overflow-hidden shrink-0">
+              <img src={logoCdn} alt="CDN" className="h-full w-full object-cover" />
             </div>
             <div className="bg-muted rounded-xl px-3 py-2 text-sm text-muted-foreground">
               <span className="inline-flex gap-1">
@@ -111,7 +127,7 @@ const AnalystChat = () => {
       </div>
 
       {/* Input */}
-      <div className="border-t border-border p-3 flex gap-2">
+      <div className="border-t border-border p-3 flex gap-2 shrink-0">
         <Input
           value={input}
           onChange={(e) => setInput(e.target.value)}

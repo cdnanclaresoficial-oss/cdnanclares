@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageCircle, X, Send, Bot, User } from "lucide-react";
+import { X, Send, Bot, User, Maximize2, Minimize2 } from "lucide-react";
 import logoCdn from "@/assets/logo-cdn.jpg";
 
 interface Message {
@@ -9,8 +9,13 @@ interface Message {
   content: string;
 }
 
-const PublicChat = () => {
-  const [open, setOpen] = useState(false);
+interface PublicChatProps {
+  autoOpen?: boolean;
+}
+
+const PublicChat = ({ autoOpen = false }: PublicChatProps) => {
+  const [open, setOpen] = useState(autoOpen);
+  const [expanded, setExpanded] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     { role: "assistant", content: "¡Hola! Soy el asistente del C.D. Nanclares. ¿En qué puedo ayudarte?" },
   ]);
@@ -59,8 +64,12 @@ const PublicChat = () => {
     );
   }
 
+  const containerClass = expanded
+    ? "fixed bottom-0 right-0 z-50 w-[50vw] h-[100vh] flex flex-col bg-card border-l border-border shadow-2xl animate-in slide-in-from-right duration-300"
+    : "fixed bottom-6 right-6 z-50 w-[400px] max-w-[calc(100vw-2rem)] h-[540px] flex flex-col bg-card border border-border rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 fade-in duration-300";
+
   return (
-    <div className="fixed bottom-6 right-6 z-50 w-[400px] max-w-[calc(100vw-2rem)] h-[540px] flex flex-col bg-card border border-border rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 fade-in duration-300">
+    <div className={containerClass}>
       {/* Header */}
       <div className="bg-primary px-5 py-4 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
@@ -70,9 +79,18 @@ const PublicChat = () => {
             <p className="text-xs text-primary-foreground/50">Asistente virtual</p>
           </div>
         </div>
-        <button onClick={() => setOpen(false)} className="text-primary-foreground/60 hover:text-primary-foreground transition-colors">
-          <X size={20} />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="text-primary-foreground/60 hover:text-primary-foreground transition-colors p-1"
+            aria-label={expanded ? "Minimizar" : "Expandir"}
+          >
+            {expanded ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+          </button>
+          <button onClick={() => { setOpen(false); setExpanded(false); }} className="text-primary-foreground/60 hover:text-primary-foreground transition-colors p-1">
+            <X size={20} />
+          </button>
+        </div>
       </div>
 
       {/* Messages */}
@@ -80,8 +98,8 @@ const PublicChat = () => {
         {messages.map((m, i) => (
           <div key={i} className={`flex gap-2.5 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
             {m.role === "assistant" && (
-              <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                <Bot size={14} className="text-primary" />
+              <div className="h-8 w-8 rounded-full overflow-hidden shrink-0 mt-0.5 ring-1 ring-border">
+                <img src={logoCdn} alt="CDN" className="h-full w-full object-cover" />
               </div>
             )}
             <div
@@ -94,7 +112,7 @@ const PublicChat = () => {
               {m.content}
             </div>
             {m.role === "user" && (
-              <div className="h-7 w-7 rounded-full bg-secondary/10 flex items-center justify-center shrink-0 mt-0.5">
+              <div className="h-8 w-8 rounded-full bg-secondary/10 flex items-center justify-center shrink-0 mt-0.5">
                 <User size={14} className="text-secondary" />
               </div>
             )}
@@ -102,8 +120,8 @@ const PublicChat = () => {
         ))}
         {loading && (
           <div className="flex gap-2.5 items-start">
-            <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-              <Bot size={14} className="text-primary" />
+            <div className="h-8 w-8 rounded-full overflow-hidden shrink-0 ring-1 ring-border">
+              <img src={logoCdn} alt="CDN" className="h-full w-full object-cover" />
             </div>
             <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-2.5 text-sm text-muted-foreground">
               <span className="inline-flex gap-1">
