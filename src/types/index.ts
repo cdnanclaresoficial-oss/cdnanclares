@@ -31,6 +31,7 @@ export interface FichaJugador {
   categoria: Categoria;
   observaciones_entrenador: string;
   estado: EstadoJugador;
+  foto_url?: string;
 }
 
 export interface ClienteDatos {
