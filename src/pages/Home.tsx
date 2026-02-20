@@ -1,9 +1,43 @@
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
 import heroBg from "@/assets/hero-bg.jpg";
 import ClubGallery from "@/components/ClubGallery";
 import PublicChat from "@/components/PublicChat";
+import { supabase } from "@/lib/supabase";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+
+const infoItems = [
+  { icon: "🏟️", title: "Historia", key: "info_historia", fallback: "Más de 60 años formando deportistas en Nanclares de la Oca." },
+  { icon: "⚽", title: "Cantera", key: "info_cantera", fallback: "Categorías desde Prebenjamín hasta Senior y Veteranos." },
+  { icon: "🤝", title: "Comunidad", key: "info_comunidad", fallback: "Un club abierto a todos, donde el deporte une a familias." },
+];
 
 const Home = () => {
+  const [clubInfo, setClubInfo] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const fetchClubInfo = async () => {
+      try {
+        const { data } = await supabase
+          .from("club_config")
+          .select("clave, valor")
+          .in("clave", ["info_historia", "info_cantera", "info_comunidad"]);
+        if (data) {
+          const map: Record<string, string> = {};
+          data.forEach((row: any) => { map[row.clave] = row.valor; });
+          setClubInfo(map);
+        }
+      } catch (err) {
+        console.error("Error fetching club_config:", err);
+      }
+    };
+    fetchClubInfo();
+  }, []);
+
   return (
     <main>
       {/* Hero */}
@@ -48,16 +82,24 @@ const Home = () => {
         <div className="container mx-auto px-4">
           <h2 className="section-title text-center mb-12">Nuestro Club</h2>
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-16">
-            {[
-              { icon: "🏟️", title: "Historia", desc: "Más de 60 años formando deportistas en Nanclares de la Oca." },
-              { icon: "⚽", title: "Cantera", desc: "Categorías desde Prebenjamín hasta Senior y Veteranos." },
-              { icon: "🤝", title: "Comunidad", desc: "Un club abierto a todos, donde el deporte une a familias." },
-            ].map((item) => (
-              <div key={item.title} className="text-center p-8 rounded-xl bg-card border border-border hover:shadow-lg transition-shadow">
-                <span className="text-4xl mb-4 block">{item.icon}</span>
-                <h3 className="font-heading text-xl font-bold text-primary uppercase mb-3">{item.title}</h3>
-                <p className="text-muted-foreground leading-relaxed">{item.desc}</p>
-              </div>
+            {infoItems.map((item) => (
+              <HoverCard key={item.key} openDelay={200} closeDelay={150}>
+                <HoverCardTrigger asChild>
+                  <div className="text-center p-8 rounded-xl bg-card border border-border hover:shadow-xl hover:scale-[1.03] transition-all duration-300 cursor-pointer">
+                    <span className="text-4xl mb-4 block">{item.icon}</span>
+                    <h3 className="font-heading text-xl font-bold text-primary uppercase mb-3">{item.title}</h3>
+                    <p className="text-muted-foreground leading-relaxed">{item.fallback}</p>
+                  </div>
+                </HoverCardTrigger>
+                <HoverCardContent className="w-80 bg-card/95 backdrop-blur-xl border-border shadow-2xl p-5" side="bottom">
+                  <h4 className="font-heading text-sm font-bold text-primary uppercase tracking-wider flex items-center gap-2 mb-2">
+                    <span>{item.icon}</span> {item.title}
+                  </h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {clubInfo[item.key] || item.fallback}
+                  </p>
+                </HoverCardContent>
+              </HoverCard>
             ))}
           </div>
 

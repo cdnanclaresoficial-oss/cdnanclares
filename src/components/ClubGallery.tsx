@@ -5,7 +5,6 @@ import { ImageOff } from "lucide-react";
 interface GalleryImage {
   id: string;
   url: string;
-  titulo: string;
 }
 
 const ClubGallery = () => {
@@ -18,7 +17,7 @@ const ClubGallery = () => {
       try {
         const { data, error } = await supabase
           .from("galeria")
-          .select("id, url, titulo")
+          .select("id, url")
           .order("created_at", { ascending: false });
         if (error) throw error;
         setImages(data || []);
@@ -55,7 +54,7 @@ const ClubGallery = () => {
         <ImageOff className="mx-auto text-muted-foreground/40 mb-4" size={48} />
         <p className="text-muted-foreground text-lg font-medium">La galería está vacía</p>
         <p className="text-muted-foreground/60 text-sm mt-1">
-          Añade fotos a la tabla <strong>galeria</strong> para verlas aquí.
+          Añade fotos a la tabla galeria para verlas aquí.
         </p>
       </div>
     );
@@ -78,17 +77,12 @@ const ClubGallery = () => {
           >
             <img
               src={img.url}
-              alt={img.titulo || "Foto del club"}
+              alt="Foto del club"
               loading="lazy"
               onLoad={() => handleImageLoad(img.id)}
               className="w-full h-auto object-cover"
               draggable={false}
             />
-            {img.titulo && (
-              <figcaption className="px-3 py-2 text-xs text-muted-foreground font-medium">
-                {img.titulo}
-              </figcaption>
-            )}
           </figure>
         );
       })}
