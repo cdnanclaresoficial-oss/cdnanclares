@@ -77,25 +77,25 @@ const Admin = () => {
       </section>
 
       <div className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="dashboard">
+        <Tabs defaultValue="jugadores">
           <TabsList className="mb-6">
-            <TabsTrigger value="dashboard" className="font-heading uppercase tracking-wider">
-              Dashboard
-            </TabsTrigger>
             <TabsTrigger value="jugadores" className="font-heading uppercase tracking-wider">
-              Jugadores ({jugadores.length})
+              Gestión de Jugadores ({jugadores.length})
+            </TabsTrigger>
+            <TabsTrigger value="analiticas" className="font-heading uppercase tracking-wider">
+              Analíticas
             </TabsTrigger>
             <TabsTrigger value="pedidos" className="font-heading uppercase tracking-wider">
-              Pedidos ({pedidos.length})
+              Pedidos de Ropa ({pedidos.length})
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="dashboard">
-            <DashboardTab jugadores={jugadores} />
-          </TabsContent>
-
           <TabsContent value="jugadores">
             <PlayersTab jugadores={jugadores} onRefresh={fetchData} />
+          </TabsContent>
+
+          <TabsContent value="analiticas">
+            <DashboardTab jugadores={jugadores} pedidos={pedidos} />
           </TabsContent>
 
           <TabsContent value="pedidos">
