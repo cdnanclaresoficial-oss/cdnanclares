@@ -15,15 +15,31 @@ const ClubGallery = () => {
   useEffect(() => {
     const fetchImages = async () => {
       try {
-        const { data, error, count, status, statusText } = await supabase
-          .from("galeria")
-          .select("id, url", { count: "exact" })
-          .order("created_at", { ascending: false });
-        console.log("🖼️ Galería response:", { data, error, count, status, statusText });
-        if (error) throw error;
-        setImages(data || []);
+        const { data, error } = await supabase.storage
+          .from("galeria-club")
+          .list("", { limit: 100, sortBy: { column: "created_at", order: "desc" } });
+
+        if (error) {
+          console.error("Storage list error:", error);
+          throw error;
+        }
+
+        // Filter only image files (ignore folders / .emptyFolderPlaceholder)
+        const imageFiles = (data || []).filter((file) =>
+          /\.(jpg|jpeg|png|gif|webp|avif|svg)$/i.test(file.name)
+        );
+
+        const mapped: GalleryImage[] = imageFiles.map((file) => {
+          const { data: urlData } = supabase.storage
+            .from("galeria-club")
+            .getPublicUrl(file.name);
+          return { id: file.id ?? file.name, url: urlData.publicUrl };
+        });
+
+        console.log("🖼️ Galería storage:", { total: data?.length, images: mapped.length, mapped });
+        setImages(mapped);
       } catch (err) {
-        console.error("Error loading gallery:", err);
+        console.error("Error loading gallery from storage:", err);
       } finally {
         setLoading(false);
       }
@@ -55,7 +71,7 @@ const ClubGallery = () => {
         <ImageOff className="mx-auto text-muted-foreground/40 mb-4" size={48} />
         <p className="text-muted-foreground text-lg font-medium">La galería está vacía</p>
         <p className="text-muted-foreground/60 text-sm mt-1">
-          Añade fotos a la tabla galeria para verlas aquí.
+          Sube fotos al bucket galeria-club para verlas aquí.
         </p>
       </div>
     );
