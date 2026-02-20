@@ -96,28 +96,19 @@ const ClubGallery = () => {
 
   return (
     <>
-      {/* Modern Bento-style Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 auto-rows-[200px] md:auto-rows-[240px] gap-2 md:gap-3">
+      {/* Masonry Grid */}
+      <div className="columns-1 md:columns-2 lg:columns-3 gap-4">
         {images.map((img, i) => {
-          // Make every 5th image span 2 rows, every 7th span 2 cols for variety
-          const spanRow = i % 5 === 0;
-          const spanCol = i % 7 === 2;
           const isLoaded = loadedImages.has(i);
-
           return (
-            <button
+            <figure
               key={img.name}
-              onClick={() => {
-                setSelectedIndex(i);
-                setZoom(1);
-              }}
-              className={`group relative overflow-hidden rounded-xl bg-muted/20 focus:outline-none focus:ring-2 focus:ring-secondary/50 focus:ring-offset-2 focus:ring-offset-background transition-all duration-500
-                ${spanRow && spanCol ? "row-span-2 col-span-2" : spanRow ? "row-span-2" : spanCol ? "col-span-2" : ""}
-              `}
+              className="break-inside-avoid mb-4 group relative overflow-hidden rounded-xl bg-muted/20 cursor-pointer"
+              onClick={() => { setSelectedIndex(i); setZoom(1); }}
               style={{
                 opacity: isLoaded ? 1 : 0,
-                transform: isLoaded ? "translateY(0)" : "translateY(20px)",
-                transition: `opacity 0.6s ease ${i * 80}ms, transform 0.6s ease ${i * 80}ms`,
+                transform: isLoaded ? "translateY(0)" : "translateY(16px)",
+                transition: `opacity 0.5s ease ${i * 60}ms, transform 0.5s ease ${i * 60}ms`,
               }}
             >
               <img
@@ -125,24 +116,16 @@ const ClubGallery = () => {
                 alt={img.caption}
                 loading="lazy"
                 onLoad={() => handleImageLoad(i)}
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                className="w-full h-auto object-cover transition-transform duration-700 ease-out group-hover:scale-105"
               />
-
-              {/* Gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-foreground/0 to-foreground/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-              {/* Caption on hover */}
-              <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out">
-                <p className="text-primary-foreground text-xs md:text-sm font-medium truncate drop-shadow-lg">
-                  {img.caption}
-                </p>
-              </div>
-
-              {/* Corner accent */}
-              <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-background/0 group-hover:bg-background/80 flex items-center justify-center transition-all duration-300 scale-0 group-hover:scale-100">
+              <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-400" />
+              <figcaption className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-400 ease-out">
+                <p className="text-primary-foreground text-sm font-medium truncate drop-shadow-lg">{img.caption}</p>
+              </figcaption>
+              <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-background/80 flex items-center justify-center scale-0 group-hover:scale-100 transition-transform duration-300">
                 <Maximize2 size={14} className="text-foreground" />
               </div>
-            </button>
+            </figure>
           );
         })}
       </div>
