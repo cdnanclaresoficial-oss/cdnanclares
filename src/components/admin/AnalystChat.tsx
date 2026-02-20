@@ -65,9 +65,10 @@ const AnalystChat = () => {
         }),
       });
       const data = await res.json();
-      setMessages((prev) => [...prev, { role: "assistant", content: data.answer || "El analista no ha devuelto respuesta." }]);
-    } catch {
-      setMessages((prev) => [...prev, { role: "assistant", content: "No se pudo conectar con el analista." }]);
+      const reply = data.answer || data.text || data.response || JSON.stringify(data);
+      setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+    } catch (err: any) {
+      setMessages((prev) => [...prev, { role: "assistant", content: `Error de conexión: ${err?.message || "desconocido"}` }]);
     } finally {
       setLoading(false);
     }

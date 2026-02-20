@@ -68,9 +68,10 @@ const PublicChat = ({ autoOpen = false, personalityKey = "asistente_personalidad
         }),
       });
       const data = await res.json();
-      setMessages((prev) => [...prev, { role: "assistant", content: data.answer || "No he podido procesar tu consulta." }]);
-    } catch {
-      setMessages((prev) => [...prev, { role: "assistant", content: "Error de conexión. Inténtalo de nuevo." }]);
+      const reply = data.answer || data.text || data.response || JSON.stringify(data);
+      setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+    } catch (err: any) {
+      setMessages((prev) => [...prev, { role: "assistant", content: `Error de conexión: ${err?.message || "desconocido"}` }]);
     } finally {
       setLoading(false);
     }
