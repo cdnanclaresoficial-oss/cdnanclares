@@ -13,9 +13,10 @@ interface Message {
 
 interface PublicChatProps {
   autoOpen?: boolean;
+  personalityKey?: string;
 }
 
-const PublicChat = ({ autoOpen = false }: PublicChatProps) => {
+const PublicChat = ({ autoOpen = false, personalityKey = "asistente_personalidad" }: PublicChatProps) => {
   const [open, setOpen] = useState(autoOpen);
   const [expanded, setExpanded] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
@@ -32,7 +33,7 @@ const PublicChat = ({ autoOpen = false }: PublicChatProps) => {
         const { data } = await supabase
           .from("club_config")
           .select("valor")
-          .eq("clave", "asistente_personalidad")
+          .eq("clave", personalityKey)
           .single();
         if (data?.valor) setPersonality(data.valor);
       } catch (err) {
@@ -40,7 +41,7 @@ const PublicChat = ({ autoOpen = false }: PublicChatProps) => {
       }
     };
     fetchPersonality();
-  }, []);
+  }, [personalityKey]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
