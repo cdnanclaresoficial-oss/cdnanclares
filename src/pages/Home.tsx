@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import heroBg from "@/assets/hero-bg.jpg";
+import ClubGallery from "@/components/ClubGallery";
 
 const Home = () => {
   return (
@@ -46,7 +47,7 @@ const Home = () => {
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
           <h2 className="section-title text-center mb-12">Nuestro Club</h2>
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-16">
             {[
               { icon: "🏟️", title: "Historia", desc: "Más de 60 años formando deportistas en Nanclares de la Oca." },
               { icon: "⚽", title: "Cantera", desc: "Categorías desde Prebenjamín hasta Senior y Veteranos." },
@@ -58,6 +59,12 @@ const Home = () => {
                 <p className="text-muted-foreground leading-relaxed">{item.desc}</p>
               </div>
             ))}
+          </div>
+
+          {/* Gallery */}
+          <h2 className="section-title text-center mb-8">Galería del Club</h2>
+          <div className="max-w-6xl mx-auto">
+            <ClubGallery />
           </div>
         </div>
       </section>
