@@ -77,6 +77,33 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Quick actions / info band */}
+      <section className="bg-secondary/5 border-y border-border">
+        <div className="container mx-auto px-4 py-6 grid gap-6 md:grid-cols-3 items-center">
+          <div>
+            <h2 className="font-heading text-lg md:text-xl font-bold text-primary uppercase tracking-wide">
+              ¿Nuevo en el club?
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Inscribe a tu hijo/a en pocos pasos o renueva su ficha para la nueva temporada.
+            </p>
+          </div>
+          <div className="text-sm text-muted-foreground space-y-1">
+            <p><span className="font-semibold text-primary">1.</span> Rellena el formulario de inscripción.</p>
+            <p><span className="font-semibold text-primary">2.</span> Te contactaremos para confirmar plaza y horarios.</p>
+            <p><span className="font-semibold text-primary">3.</span> Recoge tu equipación en el club.</p>
+          </div>
+          <div className="flex flex-col sm:flex-row md:flex-col lg:flex-row gap-3 justify-end md:justify-center">
+            <Link to="/inscripcion" className="glass-button bg-primary text-primary-foreground hover:bg-navy-light text-sm">
+              ⚽ Quiero inscribir a un jugador
+            </Link>
+            <Link to="/tienda" className="glass-button border-secondary/40 hover:bg-secondary/20 text-sm">
+              🛒 Ver equipaciones y ropa
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Info Section */}
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4">

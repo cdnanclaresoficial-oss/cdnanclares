@@ -6,7 +6,7 @@ import logoCdn from "@/assets/logo-cdn.jpg";
 const navLinks = [
   { to: "/", label: "Inicio" },
   { to: "/tienda", label: "Tienda" },
-  { to: "/inscripcion", label: "Inscripción" },
+  { to: "/inscripcion", label: "Inscripción", highlight: true },
   { to: "/admin", label: "Admin" },
 ];
 
@@ -28,20 +28,44 @@ const Navbar = () => {
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-6">
           <ul className="flex items-center gap-1">
-            {navLinks.map((l) => (
-              <li key={l.to}>
-                <Link
-                  to={l.to}
-                  className={`px-4 py-2 rounded-md font-heading text-sm uppercase tracking-wider transition-colors ${
-                    location.pathname === l.to
-                      ? "bg-secondary text-secondary-foreground"
-                      : "text-primary-foreground/80 hover:text-primary-foreground hover:bg-white/10"
-                  }`}
-                >
-                  {l.label}
-                </Link>
-              </li>
-            ))}
+            {navLinks.map((l) => {
+              const isActive = location.pathname === l.to;
+              const isHighlight = (l as any).highlight;
+              const baseClasses =
+                "px-4 py-2 rounded-md font-heading text-sm uppercase tracking-wider transition-colors";
+
+              if (isHighlight) {
+                return (
+                  <li key={l.to}>
+                    <Link
+                      to={l.to}
+                      className={`${baseClasses} ${
+                        isActive
+                          ? "bg-secondary text-secondary-foreground shadow-md"
+                          : "bg-white text-navy-deep hover:bg-secondary hover:text-secondary-foreground shadow-sm"
+                      }`}
+                    >
+                      {l.label}
+                    </Link>
+                  </li>
+                );
+              }
+
+              return (
+                <li key={l.to}>
+                  <Link
+                    to={l.to}
+                    className={`${baseClasses} ${
+                      isActive
+                        ? "bg-secondary text-secondary-foreground"
+                        : "text-primary-foreground/80 hover:text-primary-foreground hover:bg-white/10"
+                    }`}
+                  >
+                    {l.label}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </div>
 
@@ -55,20 +79,29 @@ const Navbar = () => {
       {open && (
         <div className="md:hidden gradient-navy border-t border-white/10 pb-4">
           <div className="border-t border-white/10 mt-2 pt-2">
-            {navLinks.map((l) => (
-              <Link
-                key={l.to}
-                to={l.to}
-                onClick={() => setOpen(false)}
-                className={`block px-6 py-3 font-heading uppercase tracking-wider text-sm ${
-                  location.pathname === l.to
-                    ? "text-secondary bg-white/10"
-                    : "text-primary-foreground/80 hover:bg-white/5"
-                }`}
-              >
-                {l.label}
-              </Link>
-            ))}
+            {navLinks.map((l) => {
+              const isActive = location.pathname === l.to;
+              const isHighlight = (l as any).highlight;
+
+              return (
+                <Link
+                  key={l.to}
+                  to={l.to}
+                  onClick={() => setOpen(false)}
+                  className={`block px-6 py-3 font-heading uppercase tracking-wider text-sm ${
+                    isHighlight
+                      ? isActive
+                        ? "bg-secondary text-secondary-foreground"
+                        : "text-primary-foreground bg-white/10"
+                      : isActive
+                        ? "text-secondary bg-white/10"
+                        : "text-primary-foreground/80 hover:bg-white/5"
+                  }`}
+                >
+                  {l.label}
+                </Link>
+              );
+            })}
           </div>
         </div>
       )}

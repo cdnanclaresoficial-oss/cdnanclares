@@ -89,6 +89,9 @@ const Tienda = () => {
         <div className="container mx-auto px-4 text-center">
           <h1 className="font-heading text-4xl md:text-5xl font-bold text-primary-foreground uppercase tracking-tight">Tienda Oficial</h1>
           <p className="text-primary-foreground/60 mt-2">Equipaciones y merchandising del C.D. Nanclares</p>
+          <p className="text-primary-foreground/60 mt-1 text-sm md:text-base max-w-2xl mx-auto">
+            Realiza tu pedido online y te avisaremos por email cuando puedas recogerlo en el club.
+          </p>
         </div>
       </section>
 

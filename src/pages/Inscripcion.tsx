@@ -163,6 +163,9 @@ const Inscripcion = () => {
         <div className="container mx-auto px-4 text-center">
           <h1 className="font-heading text-4xl md:text-5xl font-bold text-primary-foreground uppercase tracking-tight">Inscripción de Jugadores</h1>
           <p className="text-primary-foreground/60 mt-2">Rellena tu ficha para unirte al club</p>
+          <p className="text-primary-foreground/60 mt-1 text-sm md:text-base max-w-2xl mx-auto">
+            El formulario tarda menos de 5 minutos. Si tienes dudas, puedes escribirnos al correo del club o en la propia sede.
+          </p>
         </div>
       </section>
 
