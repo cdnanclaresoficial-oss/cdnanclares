@@ -158,7 +158,7 @@ const Inscripcion = () => {
   };
 
   return (
-    <main className="pt-20 min-h-screen bg-background">
+  <main className="pt-32 md:pt-40 min-h-screen bg-background">
       <section className="gradient-navy py-12">
         <div className="container mx-auto px-4 text-center">
           <h1 className="font-heading text-4xl md:text-5xl font-bold text-primary-foreground uppercase tracking-tight">Inscripción de Jugadores</h1>

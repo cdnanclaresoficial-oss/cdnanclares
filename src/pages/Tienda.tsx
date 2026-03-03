@@ -83,7 +83,7 @@ const Tienda = () => {
   };
 
   return (
-    <main className="pt-20 min-h-screen bg-background">
+  <main className="pt-32 md:pt-40 min-h-screen bg-background">
       {/* Header */}
       <section className="gradient-navy py-12">
         <div className="container mx-auto px-4 text-center">
