@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageCircle, X, Send, User, Maximize2, Minimize2 } from "lucide-react";
+import { ShieldCheck, X, Send, User, Maximize2, Minimize2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import logoCdn from "@/assets/logo-cdn.jpg";
 import { supabase } from "@/lib/supabase";
@@ -11,24 +11,29 @@ interface Message {
   content: string;
 }
 
-const AnalystChat = () => {
+const CoachChat = () => {
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: "¡Hola! Soy el asistente general del club. Puedo ayudarte con información institucional y operativa no sensible." },
+    { role: "assistant", content: "Hola, soy el asistente para entrenadores. Te ayudo con análisis y seguimiento de fichas de jugadores." },
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [personality, setPersonality] = useState<string | null>(null);
+  const [jugadoresContext, setJugadoresContext] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchConfig = async () => {
       try {
-        const personalityRes = await supabase.from("club_config").select("valor").eq("clave", "asistente_analista").single();
+        const [personalityRes, jugadoresRes] = await Promise.all([
+          supabase.from("club_config").select("valor").eq("clave", "asistente_entrenadores").single(),
+          supabase.from("fichas_jugadores").select("*"),
+        ]);
         if (personalityRes.data?.valor) setPersonality(personalityRes.data.valor);
+        if (jugadoresRes.data) setJugadoresContext(JSON.stringify(jugadoresRes.data));
       } catch (err) {
-        console.error("Error fetching analyst config:", err);
+        console.error("Error fetching coach config:", err);
       }
     };
     fetchConfig();
@@ -54,8 +59,9 @@ const AnalystChat = () => {
         },
         body: JSON.stringify({
           query: text,
-          modo: "club",
+          modo: "entrenadores",
           ...(personality ? { system_prompt: personality } : {}),
+          ...(jugadoresContext ? { jugadores_data: jugadoresContext } : {}),
         }),
       });
       const data = await res.json();
@@ -66,47 +72,41 @@ const AnalystChat = () => {
     } finally {
       setLoading(false);
     }
-  }, [input, loading, personality]);
+  }, [input, loading, personality, jugadoresContext]);
 
   if (!open) {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:scale-110 transition-transform"
-        aria-label="Abrir chat"
+        className="fixed bottom-24 right-6 z-50 h-14 w-14 rounded-full bg-secondary text-secondary-foreground shadow-lg flex items-center justify-center hover:scale-110 transition-transform"
+        aria-label="Abrir chat entrenadores"
       >
-        <MessageCircle size={24} />
+        <ShieldCheck size={22} />
       </button>
     );
   }
 
   const containerClass = expanded
     ? "fixed bottom-0 right-0 z-50 w-[50vw] h-[100vh] flex flex-col bg-card border-l border-border shadow-2xl animate-in slide-in-from-right duration-300"
-    : "fixed bottom-6 right-6 z-50 w-[380px] max-h-[520px] flex flex-col bg-card border border-border rounded-2xl shadow-2xl overflow-hidden animate-scale-in";
+    : "fixed bottom-24 right-6 z-50 w-[420px] max-h-[520px] flex flex-col bg-card border border-border rounded-2xl shadow-2xl overflow-hidden animate-scale-in";
 
   return (
     <div className={containerClass}>
-      {/* Header */}
-      <div className="gradient-navy px-4 py-3 flex items-center justify-between shrink-0">
+      <div className="bg-secondary px-4 py-3 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2">
-          <img src={logoCdn} alt="CDN" className="h-7 w-7 rounded-full object-cover ring-1 ring-primary-foreground/20" />
-          <span className="font-heading text-sm font-bold text-primary-foreground uppercase tracking-wider">El Analista</span>
+          <img src={logoCdn} alt="CDN" className="h-7 w-7 rounded-full object-cover ring-1 ring-secondary-foreground/20" />
+          <span className="font-heading text-sm font-bold text-secondary-foreground uppercase tracking-wider">Coach IA</span>
         </div>
         <div className="flex items-center gap-1">
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="text-primary-foreground/60 hover:text-primary-foreground p-1 transition-colors"
-            aria-label={expanded ? "Minimizar" : "Expandir"}
-          >
+          <button onClick={() => setExpanded(!expanded)} className="text-secondary-foreground/70 hover:text-secondary-foreground p-1 transition-colors">
             {expanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
           </button>
-          <button onClick={() => { setOpen(false); setExpanded(false); }} className="text-primary-foreground/60 hover:text-primary-foreground p-1 transition-colors">
+          <button onClick={() => { setOpen(false); setExpanded(false); }} className="text-secondary-foreground/70 hover:text-secondary-foreground p-1 transition-colors">
             <X size={18} />
           </button>
         </div>
       </div>
 
-      {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[300px]">
         {messages.map((m, i) => (
           <div key={i} className={`flex gap-2 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
@@ -120,17 +120,7 @@ const AnalystChat = () => {
                 ? "bg-primary text-primary-foreground rounded-br-sm"
                 : "bg-muted text-foreground rounded-bl-sm"
             }`}>
-              <ReactMarkdown
-                components={{
-                  p: ({ children }) => <p className="mb-1 last:mb-0">{children}</p>,
-                  strong: ({ children }) => <strong className="font-bold">{children}</strong>,
-                  ul: ({ children }) => <ul className="list-disc pl-4 mb-1">{children}</ul>,
-                  ol: ({ children }) => <ol className="list-decimal pl-4 mb-1">{children}</ol>,
-                  li: ({ children }) => <li className="mb-0.5">{children}</li>,
-                }}
-              >
-                {m.content}
-              </ReactMarkdown>
+              <ReactMarkdown>{m.content}</ReactMarkdown>
             </div>
             {m.role === "user" && (
               <div className="h-7 w-7 rounded-full bg-secondary/10 flex items-center justify-center shrink-0">
@@ -144,25 +134,18 @@ const AnalystChat = () => {
             <div className="h-7 w-7 rounded-full overflow-hidden shrink-0">
               <img src={logoCdn} alt="CDN" className="h-full w-full object-cover" />
             </div>
-            <div className="bg-muted rounded-xl px-3 py-2 text-sm text-muted-foreground">
-              <span className="inline-flex gap-1">
-                <span className="animate-bounce" style={{ animationDelay: "0ms" }}>●</span>
-                <span className="animate-bounce" style={{ animationDelay: "150ms" }}>●</span>
-                <span className="animate-bounce" style={{ animationDelay: "300ms" }}>●</span>
-              </span>
-            </div>
+            <div className="bg-muted rounded-xl px-3 py-2 text-sm text-muted-foreground">Pensando...</div>
           </div>
         )}
         <div ref={bottomRef} />
       </div>
 
-      {/* Input */}
       <div className="border-t border-border p-3 flex gap-2 shrink-0">
         <Input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSend()}
-          placeholder="Escribe tu pregunta..."
+          placeholder="Consulta sobre fichas y entrenamientos..."
           className="text-sm"
         />
         <Button size="icon" onClick={handleSend} disabled={loading || !input.trim()} className="shrink-0">
@@ -173,4 +156,4 @@ const AnalystChat = () => {
   );
 };
 
-export default AnalystChat;
+export default CoachChat;

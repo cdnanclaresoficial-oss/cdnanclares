@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ShoppingCart, Plus, Minus, X } from "lucide-react";
 import { pedidosService } from "@/lib/supabase";
-import PublicChat from "@/components/PublicChat";
+import StoreChat from "@/components/StoreChat";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -203,7 +203,7 @@ const Tienda = () => {
         )}
       </div>
 
-      <PublicChat personalityKey="asistente_tienda" />
+      <StoreChat />
     </main>
   );
 };

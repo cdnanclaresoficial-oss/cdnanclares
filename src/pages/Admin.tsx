@@ -10,6 +10,7 @@ import OrdersTab from "@/components/admin/OrdersTab";
 import DashboardTab from "@/components/admin/DashboardTab";
 import SociosTab from "@/components/admin/SociosTab";
 import AnalystChat from "@/components/admin/AnalystChat";
+import CoachChat from "@/components/admin/CoachChat";
 import type { FichaJugador, PedidoRopa, Socio } from "@/types";
 
 const Admin = () => {
@@ -116,6 +117,7 @@ const Admin = () => {
 
       {/* Chatbot */}
       <AnalystChat />
+      <CoachChat />
     </main>
   );
 };

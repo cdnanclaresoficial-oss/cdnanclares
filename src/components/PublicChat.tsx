@@ -14,13 +14,24 @@ interface Message {
 interface PublicChatProps {
   autoOpen?: boolean;
   personalityKey?: string;
+  mode?: "publico" | "tienda" | "club";
+  welcomeMessage?: string;
+  assistantName?: string;
+  assistantSubtitle?: string;
 }
 
-const PublicChat = ({ autoOpen = false, personalityKey = "asistente_personalidad" }: PublicChatProps) => {
+const PublicChat = ({
+  autoOpen = false,
+  personalityKey = "asistente_personalidad",
+  mode = "publico",
+  welcomeMessage = "¡Hola! Soy el asistente del C.D. Nanclares. ¿En qué puedo ayudarte?",
+  assistantName = "C.D. Nanclares",
+  assistantSubtitle = "Asistente virtual",
+}: PublicChatProps) => {
   const [open, setOpen] = useState(autoOpen);
   const [expanded, setExpanded] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: "¡Hola! Soy el asistente del C.D. Nanclares. ¿En qué puedo ayudarte?" },
+    { role: "assistant", content: welcomeMessage },
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -44,6 +55,10 @@ const PublicChat = ({ autoOpen = false, personalityKey = "asistente_personalidad
   }, [personalityKey]);
 
   useEffect(() => {
+    setMessages([{ role: "assistant", content: welcomeMessage }]);
+  }, [welcomeMessage]);
+
+  useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
@@ -63,7 +78,7 @@ const PublicChat = ({ autoOpen = false, personalityKey = "asistente_personalidad
         },
         body: JSON.stringify({
           query: text,
-          modo: "publico",
+          modo: mode,
           ...(personality ? { system_prompt: personality } : {}),
         }),
       });
@@ -75,7 +90,7 @@ const PublicChat = ({ autoOpen = false, personalityKey = "asistente_personalidad
     } finally {
       setLoading(false);
     }
-  }, [input, loading, personality]);
+  }, [input, loading, personality, mode]);
 
   if (!open) {
     return (
@@ -100,8 +115,8 @@ const PublicChat = ({ autoOpen = false, personalityKey = "asistente_personalidad
         <div className="flex items-center gap-3">
           <img src={logoCdn} alt="CDN" className="h-9 w-9 rounded-full object-cover ring-2 ring-primary-foreground/20" />
           <div>
-            <p className="font-heading text-sm font-bold text-primary-foreground uppercase tracking-wider">C.D. Nanclares</p>
-            <p className="text-xs text-primary-foreground/50">Asistente virtual</p>
+            <p className="font-heading text-sm font-bold text-primary-foreground uppercase tracking-wider">{assistantName}</p>
+            <p className="text-xs text-primary-foreground/50">{assistantSubtitle}</p>
           </div>
         </div>
         <div className="flex items-center gap-1">
