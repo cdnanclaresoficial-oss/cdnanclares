@@ -7,6 +7,7 @@ const StoreChat = () => (
     assistantName="Tienda C.D. Nanclares"
     assistantSubtitle="Asistente de compra"
     welcomeMessage="¡Hola! Soy el asistente de tienda. Te ayudo con tallas, productos y pedidos."
+    includeShopCatalog
   />
 );
 

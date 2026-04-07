@@ -18,7 +18,15 @@ interface PublicChatProps {
   welcomeMessage?: string;
   assistantName?: string;
   assistantSubtitle?: string;
+  includeShopCatalog?: boolean;
 }
+
+const FACTUAL_GUARDRAILS = [
+  "Norma obligatoria: no inventes datos, nombres, cifras, plantillas, horarios ni resultados.",
+  "Si no tienes información verificada en el contexto disponible, di exactamente que no dispones de ese dato confirmado.",
+  "En ese caso, ofrece ayuda alternativa con información general del club (ubicación, cómo llegar, distancias, contacto, trámites, tienda o formularios).",
+  "No afirmes hechos específicos sin base en datos proporcionados.",
+].join(" ");
 
 const PublicChat = ({
   autoOpen = false,
@@ -27,6 +35,7 @@ const PublicChat = ({
   welcomeMessage = "¡Hola! Soy el asistente del C.D. Nanclares. ¿En qué puedo ayudarte?",
   assistantName = "C.D. Nanclares",
   assistantSubtitle = "Asistente virtual",
+  includeShopCatalog = false,
 }: PublicChatProps) => {
   const [open, setOpen] = useState(autoOpen);
   const [expanded, setExpanded] = useState(false);
@@ -36,6 +45,7 @@ const PublicChat = ({
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [personality, setPersonality] = useState<string | null>(null);
+  const [shopCatalogContext, setShopCatalogContext] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -53,6 +63,26 @@ const PublicChat = ({
     };
     fetchPersonality();
   }, [personalityKey]);
+
+  useEffect(() => {
+    if (!includeShopCatalog) {
+      setShopCatalogContext(null);
+      return;
+    }
+
+    const fetchShopCatalog = async () => {
+      try {
+        const { data } = await supabase.from("productos_tienda").select("*");
+        if (data) {
+          setShopCatalogContext(JSON.stringify(data));
+        }
+      } catch (err) {
+        console.error("Error fetching productos_tienda:", err);
+      }
+    };
+
+    fetchShopCatalog();
+  }, [includeShopCatalog]);
 
   useEffect(() => {
     setMessages([{ role: "assistant", content: welcomeMessage }]);
@@ -79,7 +109,17 @@ const PublicChat = ({
         body: JSON.stringify({
           query: text,
           modo: mode,
-          ...(personality ? { system_prompt: personality } : {}),
+          ...(personality || shopCatalogContext || FACTUAL_GUARDRAILS
+            ? {
+                system_prompt: [
+                  FACTUAL_GUARDRAILS,
+                  personality || "",
+                  shopCatalogContext ? `Catalogo de tienda en JSON: ${shopCatalogContext}` : "",
+                ]
+                  .filter(Boolean)
+                  .join("\n\n"),
+              }
+            : {}),
         }),
       });
       const data = await res.json();
@@ -90,7 +130,7 @@ const PublicChat = ({
     } finally {
       setLoading(false);
     }
-  }, [input, loading, personality, mode]);
+  }, [input, loading, personality, mode, shopCatalogContext]);
 
   if (!open) {
     return (
