@@ -68,3 +68,25 @@ export interface Producto {
   tallas: string[];
   categoria: string;
 }
+
+export interface Socio {
+  id: string;
+  created_at: string;
+  numero_socio: number;
+  nombre: string;
+  primer_apellido: string;
+  segundo_apellido: string;
+  dni: string;
+  fecha_nacimiento: string;
+  direccion_calle: string;
+  direccion_numero: string;
+  direccion_piso?: string;
+  direccion_puerta?: string;
+  direccion_codigo_postal: string;
+  direccion_ciudad: string;
+  direccion_provincia: string;
+  direccion_pais: string;
+  email: string;
+  telefono: string;
+  telefono_tutor?: string;
+}

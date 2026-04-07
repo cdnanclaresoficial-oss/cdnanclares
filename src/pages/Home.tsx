@@ -64,6 +64,9 @@ const Home = () => {
             <Link to="/inscripcion" className="glass-button hover:scale-105 transform">
               ⚽ Área de Jugadores
             </Link>
+            <Link to="/hazte-socio" className="glass-button border-secondary/40 hover:bg-secondary/20 hover:scale-105 transform">
+              🤝 Hazte Socio
+            </Link>
             <Link to="/tienda" className="glass-button border-secondary/40 hover:bg-secondary/20 hover:scale-105 transform">
               🛒 Tienda Oficial
             </Link>
@@ -96,6 +99,9 @@ const Home = () => {
           <div className="flex flex-col sm:flex-row md:flex-col lg:flex-row gap-3 justify-end md:justify-center">
             <Link to="/inscripcion" className="glass-button bg-primary text-primary-foreground hover:bg-navy-light text-sm">
               ⚽ Quiero inscribir a un jugador
+            </Link>
+            <Link to="/hazte-socio" className="glass-button border-secondary/40 hover:bg-secondary/20 text-sm">
+              🤝 Quiero hacerme socio
             </Link>
             <Link to="/tienda" className="glass-button border-secondary/40 hover:bg-secondary/20 text-sm">
               🛒 Ver equipaciones y ropa

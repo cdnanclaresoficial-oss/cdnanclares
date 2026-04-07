@@ -3,13 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LogOut, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { fichasService, pedidosService, authService } from "@/lib/supabase";
+import { fichasService, pedidosService, sociosService, authService } from "@/lib/supabase";
 import AdminLogin from "@/components/admin/AdminLogin";
 import PlayersTab from "@/components/admin/PlayersTab";
 import OrdersTab from "@/components/admin/OrdersTab";
 import DashboardTab from "@/components/admin/DashboardTab";
+import SociosTab from "@/components/admin/SociosTab";
 import AnalystChat from "@/components/admin/AnalystChat";
-import type { FichaJugador, PedidoRopa } from "@/types";
+import type { FichaJugador, PedidoRopa, Socio } from "@/types";
 
 const Admin = () => {
   const { toast } = useToast();
@@ -17,6 +18,7 @@ const Admin = () => {
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [jugadores, setJugadores] = useState<FichaJugador[]>([]);
   const [pedidos, setPedidos] = useState<PedidoRopa[]>([]);
+  const [socios, setSocios] = useState<Socio[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -29,9 +31,10 @@ const Admin = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [j, p] = await Promise.all([fichasService.getAll(), pedidosService.getAll()]);
+      const [j, p, s] = await Promise.all([fichasService.getAll(), pedidosService.getAll(), sociosService.getAll()]);
       setJugadores(j as FichaJugador[]);
       setPedidos(p as PedidoRopa[]);
+      setSocios(s as Socio[]);
     } catch (err: any) {
       toast({ title: "Error al cargar datos", description: err.message, variant: "destructive" });
     } finally {
@@ -88,6 +91,9 @@ const Admin = () => {
             <TabsTrigger value="pedidos" className="font-heading uppercase tracking-wider">
               Pedidos de Ropa ({pedidos.length})
             </TabsTrigger>
+            <TabsTrigger value="socios" className="font-heading uppercase tracking-wider">
+              Socios ({socios.length})
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="jugadores">
@@ -100,6 +106,10 @@ const Admin = () => {
 
           <TabsContent value="pedidos">
             <OrdersTab pedidos={pedidos} onRefresh={fetchData} />
+          </TabsContent>
+
+          <TabsContent value="socios">
+            <SociosTab socios={socios} />
           </TabsContent>
         </Tabs>
       </div>

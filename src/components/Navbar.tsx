@@ -5,8 +5,9 @@ import logoCdn from "@/assets/logo-cdn.jpg";
 
 const navLinks = [
   { to: "/", label: "Inicio" },
+  { to: "/inscripcion", label: "Área Jugadores", highlight: true },
+  { to: "/hazte-socio", label: "Hazte Socio", highlight: true },
   { to: "/tienda", label: "Tienda" },
-  { to: "/inscripcion", label: "Inscripción", highlight: true },
   { to: "/admin", label: "Admin" },
 ];
 

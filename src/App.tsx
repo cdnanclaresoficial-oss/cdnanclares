@@ -7,6 +7,7 @@ import Navbar from "@/components/Navbar";
 import Home from "@/pages/Home";
 import Tienda from "@/pages/Tienda";
 import Inscripcion from "@/pages/Inscripcion";
+import HazteSocio from "@/pages/HazteSocio";
 import Admin from "@/pages/Admin";
 import NotFound from "@/pages/NotFound";
 
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/" element={<Home />} />
           <Route path="/tienda" element={<Tienda />} />
           <Route path="/inscripcion" element={<Inscripcion />} />
+          <Route path="/hazte-socio" element={<HazteSocio />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

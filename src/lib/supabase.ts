@@ -49,6 +49,40 @@ export const pedidosService = {
   },
 };
 
+// --- Socios ---
+export const sociosService = {
+  async getAll() {
+    const { data, error } = await supabase
+      .from("socios")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return data;
+  },
+  async create(socio: Omit<import("@/types").Socio, "id" | "created_at" | "numero_socio">) {
+    const { data, error } = await supabase.rpc("registrar_socio_publico", {
+      p_nombre: socio.nombre,
+      p_primer_apellido: socio.primer_apellido,
+      p_segundo_apellido: socio.segundo_apellido,
+      p_dni: socio.dni,
+      p_fecha_nacimiento: socio.fecha_nacimiento,
+      p_direccion_calle: socio.direccion_calle,
+      p_direccion_numero: socio.direccion_numero,
+      p_direccion_piso: socio.direccion_piso ?? null,
+      p_direccion_puerta: socio.direccion_puerta ?? null,
+      p_direccion_codigo_postal: socio.direccion_codigo_postal,
+      p_direccion_ciudad: socio.direccion_ciudad,
+      p_direccion_provincia: socio.direccion_provincia,
+      p_direccion_pais: socio.direccion_pais,
+      p_email: socio.email,
+      p_telefono: socio.telefono,
+      p_telefono_tutor: socio.telefono_tutor ?? null,
+    });
+    if (error) throw error;
+    return data;
+  },
+};
+
 // --- Auth ---
 export const authService = {
   async signIn(email: string, password: string) {
