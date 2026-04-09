@@ -2,6 +2,7 @@ import PublicChat from "@/components/PublicChat";
 
 const StoreChat = () => (
   <PublicChat
+    autoOpen
     personalityKey="asistente_tienda"
     mode="tienda"
     assistantName="Tienda C.D. Nanclares"

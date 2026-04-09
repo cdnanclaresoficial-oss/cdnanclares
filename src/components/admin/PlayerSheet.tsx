@@ -144,6 +144,17 @@ const PlayerSheet = ({ player, open, onClose, onSaved }: PlayerSheetProps) => {
             </div>
           </div>
 
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs font-semibold text-muted-foreground uppercase">Teléfono Padre</Label>
+              <Input value={form.telefono_padre || ""} onChange={(e) => set("telefono_padre", e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-xs font-semibold text-muted-foreground uppercase">Teléfono Madre</Label>
+              <Input value={form.telefono_madre || ""} onChange={(e) => set("telefono_madre", e.target.value)} />
+            </div>
+          </div>
+
           <div>
             <Label className="text-xs font-semibold text-muted-foreground uppercase">Dirección</Label>
             <Input value={form.direccion || ""} onChange={(e) => set("direccion", e.target.value)} />

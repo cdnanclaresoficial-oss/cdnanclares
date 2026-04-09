@@ -23,6 +23,8 @@ export interface FichaJugador {
   dni: string;
   email: string;
   telefono: string;
+  telefono_padre?: string;
+  telefono_madre?: string;
   direccion: string;
   fecha_nacimiento: string;
   peso: number;

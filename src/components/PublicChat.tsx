@@ -44,9 +44,11 @@ const PublicChat = ({
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showAutoCloseNotice, setShowAutoCloseNotice] = useState(false);
   const [personality, setPersonality] = useState<string | null>(null);
   const [shopCatalogContext, setShopCatalogContext] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const userInteractedRef = useRef(false);
 
   useEffect(() => {
     const fetchPersonality = async () => {
@@ -92,9 +94,36 @@ const PublicChat = ({
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
+  useEffect(() => {
+    if (!open) return;
+    userInteractedRef.current = false;
+    setShowAutoCloseNotice(false);
+
+    const noticeTimeoutId = setTimeout(() => {
+      if (!userInteractedRef.current) {
+        setShowAutoCloseNotice(true);
+      }
+    }, 10000);
+
+    const timeoutId = setTimeout(() => {
+      if (!userInteractedRef.current) {
+        setOpen(false);
+        setExpanded(false);
+        setShowAutoCloseNotice(false);
+      }
+    }, 12000);
+
+    return () => {
+      clearTimeout(noticeTimeoutId);
+      clearTimeout(timeoutId);
+    };
+  }, [open]);
+
   const handleSend = useCallback(async () => {
     const text = input.trim();
     if (!text || loading) return;
+    userInteractedRef.current = true;
+    setShowAutoCloseNotice(false);
     setMessages((prev) => [...prev, { role: "user", content: text }]);
     setInput("");
     setLoading(true);
@@ -149,6 +178,7 @@ const PublicChat = ({
     : "fixed bottom-6 right-6 z-50 w-[400px] max-w-[calc(100vw-2rem)] h-[540px] flex flex-col bg-card border border-border rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 fade-in duration-300";
 
   return (
+    <>
     <div className={containerClass}>
       {/* Header */}
       <div className="bg-primary px-5 py-4 flex items-center justify-between shrink-0">
@@ -161,7 +191,10 @@ const PublicChat = ({
         </div>
         <div className="flex items-center gap-1">
           <button
-            onClick={() => setExpanded(!expanded)}
+            onClick={() => {
+              userInteractedRef.current = true;
+              setExpanded(!expanded);
+            }}
             className="text-primary-foreground/60 hover:text-primary-foreground transition-colors p-1"
             aria-label={expanded ? "Minimizar" : "Expandir"}
           >
@@ -229,7 +262,10 @@ const PublicChat = ({
       <div className="border-t border-border p-3 flex gap-2 shrink-0 bg-card">
         <Input
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={(e) => {
+            userInteractedRef.current = true;
+            setInput(e.target.value);
+          }}
           onKeyDown={(e) => e.key === "Enter" && handleSend()}
           placeholder="Escribe tu pregunta..."
           className="text-sm rounded-xl"
@@ -239,6 +275,36 @@ const PublicChat = ({
         </Button>
       </div>
     </div>
+    {showAutoCloseNotice && (
+      <>
+        <div className="fixed bottom-[170px] right-6 z-[70] w-[min(92vw,560px)] rounded-2xl border-4 border-amber-500 bg-amber-300 px-6 py-4 text-center font-heading shadow-[0_0_38px_rgba(251,191,36,1)] animate-pulse">
+          <p className="text-xl md:text-2xl font-extrabold text-black leading-tight">
+            No te molesto mas, si quieres algo aqui me tienes !
+          </p>
+          <p className="mt-2 text-base md:text-lg font-bold text-black">
+            Este chat se cerrara en unos segundos
+          </p>
+        </div>
+        <svg className="pointer-events-none fixed inset-0 z-[69]" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <defs>
+            <marker id="chatArrowPublic" viewBox="0 0 10 10" refX="5" refY="9" markerWidth="8" markerHeight="8" orient="auto">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#f59e0b" />
+            </marker>
+          </defs>
+          <line
+            x1="86"
+            y1="74"
+            x2="92"
+            y2="88"
+            stroke="#f59e0b"
+            strokeWidth="1.2"
+            markerEnd="url(#chatArrowPublic)"
+            style={{ filter: "drop-shadow(0 0 6px rgba(245,158,11,0.95))" }}
+          />
+        </svg>
+      </>
+    )}
+    </>
   );
 };
 

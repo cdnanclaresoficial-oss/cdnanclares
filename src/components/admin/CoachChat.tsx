@@ -19,9 +19,11 @@ const CoachChat = () => {
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showAutoCloseNotice, setShowAutoCloseNotice] = useState(false);
   const [personality, setPersonality] = useState<string | null>(null);
   const [jugadoresContext, setJugadoresContext] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const userInteractedRef = useRef(false);
 
   useEffect(() => {
     const fetchConfig = async () => {
@@ -43,9 +45,36 @@ const CoachChat = () => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
+  useEffect(() => {
+    if (!open) return;
+    userInteractedRef.current = false;
+    setShowAutoCloseNotice(false);
+
+    const noticeTimeoutId = setTimeout(() => {
+      if (!userInteractedRef.current) {
+        setShowAutoCloseNotice(true);
+      }
+    }, 10000);
+
+    const timeoutId = setTimeout(() => {
+      if (!userInteractedRef.current) {
+        setOpen(false);
+        setExpanded(false);
+        setShowAutoCloseNotice(false);
+      }
+    }, 12000);
+
+    return () => {
+      clearTimeout(noticeTimeoutId);
+      clearTimeout(timeoutId);
+    };
+  }, [open]);
+
   const handleSend = useCallback(async () => {
     const text = input.trim();
     if (!text || loading) return;
+    userInteractedRef.current = true;
+    setShowAutoCloseNotice(false);
     setMessages((prev) => [...prev, { role: "user", content: text }]);
     setInput("");
     setLoading(true);
@@ -91,6 +120,7 @@ const CoachChat = () => {
     : "fixed bottom-24 right-6 z-50 w-[420px] max-h-[520px] flex flex-col bg-card border border-border rounded-2xl shadow-2xl overflow-hidden animate-scale-in";
 
   return (
+    <>
     <div className={containerClass}>
       <div className="bg-secondary px-4 py-3 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2">
@@ -98,7 +128,7 @@ const CoachChat = () => {
           <span className="font-heading text-sm font-bold text-secondary-foreground uppercase tracking-wider">Coach IA</span>
         </div>
         <div className="flex items-center gap-1">
-          <button onClick={() => setExpanded(!expanded)} className="text-secondary-foreground/70 hover:text-secondary-foreground p-1 transition-colors">
+          <button onClick={() => { userInteractedRef.current = true; setExpanded(!expanded); }} className="text-secondary-foreground/70 hover:text-secondary-foreground p-1 transition-colors">
             {expanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
           </button>
           <button onClick={() => { setOpen(false); setExpanded(false); }} className="text-secondary-foreground/70 hover:text-secondary-foreground p-1 transition-colors">
@@ -143,7 +173,10 @@ const CoachChat = () => {
       <div className="border-t border-border p-3 flex gap-2 shrink-0">
         <Input
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={(e) => {
+            userInteractedRef.current = true;
+            setInput(e.target.value);
+          }}
           onKeyDown={(e) => e.key === "Enter" && handleSend()}
           placeholder="Consulta sobre fichas y entrenamientos..."
           className="text-sm"
@@ -153,6 +186,36 @@ const CoachChat = () => {
         </Button>
       </div>
     </div>
+    {showAutoCloseNotice && (
+      <>
+        <div className="fixed left-1/2 top-[42%] z-[70] w-[92vw] max-w-4xl -translate-x-1/2 -translate-y-1/2 rounded-3xl border-4 border-amber-500 bg-amber-300 px-8 py-6 text-center font-heading shadow-[0_0_38px_rgba(251,191,36,1)] animate-pulse">
+          <p className="text-2xl md:text-4xl font-extrabold text-black leading-tight">
+            No te molesto mas, si quieres algo aqui me tienes !
+          </p>
+          <p className="mt-3 text-lg md:text-2xl font-bold text-black">
+            Este chat se cerrara en unos segundos
+          </p>
+        </div>
+        <svg className="pointer-events-none fixed inset-0 z-[69]" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <defs>
+            <marker id="chatArrowCoach" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#f59e0b" />
+            </marker>
+          </defs>
+          <line
+            x1="55"
+            y1="52"
+            x2="92"
+            y2="88"
+            stroke="#f59e0b"
+            strokeWidth="1.2"
+            markerEnd="url(#chatArrowCoach)"
+            style={{ filter: "drop-shadow(0 0 6px rgba(245,158,11,0.95))" }}
+          />
+        </svg>
+      </>
+    )}
+    </>
   );
 };
 

@@ -63,6 +63,7 @@ const FormField = ({
 
 const INITIAL_FORM = {
   nombre: "", apellidos: "", dni: "", email: "", telefono: "", direccion: "",
+  telefono_padre: "", telefono_madre: "",
   fecha_nacimiento: "", peso: "", altura: "", posicion: "", categoria: "", observaciones: "",
   foto_url: "",
 };
@@ -139,6 +140,8 @@ const Inscripcion = () => {
         dni: form.dni,
         email: form.email,
         telefono: form.telefono,
+        telefono_padre: form.telefono_padre || "",
+        telefono_madre: form.telefono_madre || "",
         direccion: form.direccion,
         fecha_nacimiento: form.fecha_nacimiento,
         peso: Number(form.peso),
@@ -212,6 +215,8 @@ const Inscripcion = () => {
               <FormField k="dni" label="DNI" placeholder="12345678A" value={form.dni} error={errors.dni} onChange={set} />
               <FormField k="email" label="Email" type="email" value={form.email} error={errors.email} onChange={set} />
               <FormField k="telefono" label="Teléfono" type="tel" value={form.telefono} error={errors.telefono} onChange={set} />
+              <FormField k="telefono_padre" label="Teléfono del padre (opcional)" type="tel" value={form.telefono_padre} error={errors.telefono_padre} onChange={set} />
+              <FormField k="telefono_madre" label="Teléfono de la madre (opcional)" type="tel" value={form.telefono_madre} error={errors.telefono_madre} onChange={set} />
               <FormField k="direccion" label="Dirección" value={form.direccion} error={errors.direccion} onChange={set} />
               <FormField k="fecha_nacimiento" label="Fecha de Nacimiento" type="date" value={form.fecha_nacimiento} error={errors.fecha_nacimiento} onChange={set} />
             </div>
@@ -258,6 +263,8 @@ const Inscripcion = () => {
                   ["DNI", form.dni],
                   ["Email", form.email],
                   ["Teléfono", form.telefono],
+                  ["Tel. Padre", form.telefono_padre || "No indicado"],
+                  ["Tel. Madre", form.telefono_madre || "No indicado"],
                   ["Dirección", form.direccion],
                   ["F. Nacimiento", form.fecha_nacimiento],
                   ["Peso", `${form.peso} kg`],
