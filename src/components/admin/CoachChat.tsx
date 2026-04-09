@@ -54,7 +54,7 @@ const CoachChat = () => {
       if (!userInteractedRef.current) {
         setShowAutoCloseNotice(true);
       }
-    }, 10000);
+    }, 5000);
 
     const timeoutId = setTimeout(() => {
       if (!userInteractedRef.current) {
@@ -62,7 +62,7 @@ const CoachChat = () => {
         setExpanded(false);
         setShowAutoCloseNotice(false);
       }
-    }, 12000);
+    }, 10000);
 
     return () => {
       clearTimeout(noticeTimeoutId);
@@ -120,7 +120,6 @@ const CoachChat = () => {
     : "fixed bottom-24 right-6 z-50 w-[420px] max-h-[520px] flex flex-col bg-card border border-border rounded-2xl shadow-2xl overflow-hidden animate-scale-in";
 
   return (
-    <>
     <div className={containerClass}>
       <div className="bg-secondary px-4 py-3 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2">
@@ -138,6 +137,16 @@ const CoachChat = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[300px]">
+        {showAutoCloseNotice && (
+          <div className="rounded-xl border-2 border-amber-500 bg-amber-300 px-4 py-3 text-center font-heading shadow-[0_0_14px_rgba(251,191,36,0.9)]">
+            <p className="text-sm md:text-base font-extrabold text-black leading-tight">
+              No te molesto mas, si quieres algo aqui me tienes !
+            </p>
+            <p className="mt-1 text-xs md:text-sm font-bold text-black">
+              Este chat se cerrara en unos segundos
+            </p>
+          </div>
+        )}
         {messages.map((m, i) => (
           <div key={i} className={`flex gap-2 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
             {m.role === "assistant" && (
@@ -186,36 +195,6 @@ const CoachChat = () => {
         </Button>
       </div>
     </div>
-    {showAutoCloseNotice && (
-      <>
-        <div className="fixed left-1/2 top-[42%] z-[70] w-[92vw] max-w-4xl -translate-x-1/2 -translate-y-1/2 rounded-3xl border-4 border-amber-500 bg-amber-300 px-8 py-6 text-center font-heading shadow-[0_0_38px_rgba(251,191,36,1)] animate-pulse">
-          <p className="text-2xl md:text-4xl font-extrabold text-black leading-tight">
-            No te molesto mas, si quieres algo aqui me tienes !
-          </p>
-          <p className="mt-3 text-lg md:text-2xl font-bold text-black">
-            Este chat se cerrara en unos segundos
-          </p>
-        </div>
-        <svg className="pointer-events-none fixed inset-0 z-[69]" viewBox="0 0 100 100" preserveAspectRatio="none">
-          <defs>
-            <marker id="chatArrowCoach" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-              <path d="M 0 0 L 10 5 L 0 10 z" fill="#f59e0b" />
-            </marker>
-          </defs>
-          <line
-            x1="55"
-            y1="52"
-            x2="92"
-            y2="88"
-            stroke="#f59e0b"
-            strokeWidth="1.2"
-            markerEnd="url(#chatArrowCoach)"
-            style={{ filter: "drop-shadow(0 0 6px rgba(245,158,11,0.95))" }}
-          />
-        </svg>
-      </>
-    )}
-    </>
   );
 };
 

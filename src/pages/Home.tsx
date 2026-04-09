@@ -16,8 +16,30 @@ const infoItems = [
   { icon: "🤝", title: "Comunidad", key: "info_comunidad", fallback: "Un club abierto a todos, donde el deporte une a familias." },
 ];
 
+const SPONSORS_BUCKET_BASE = "https://rwqbrwpzgjhkgnkqtlab.supabase.co/storage/v1/object/public/patrocinadores";
+const CONVENIO_ALAVES_URL = `${SPONSORS_BUCKET_BASE}/convenio-deportivo-alaves.webp`;
+const SPONSOR_CAROUSEL_URLS = [
+  `${SPONSORS_BUCKET_BASE}/ayuntamiento-iruna-oca.webp`,
+  `${SPONSORS_BUCKET_BASE}/erdiko-bar.webp`,
+  `${SPONSORS_BUCKET_BASE}/talleres-langrares.webp`,
+  `${SPONSORS_BUCKET_BASE}/montse-romero-mapfre.webp`,
+  `${SPONSORS_BUCKET_BASE}/vialki.webp`,
+  `${SPONSORS_BUCKET_BASE}/restaurante-rosa.webp`,
+  `${SPONSORS_BUCKET_BASE}/alanzo-servicios-construccion.webp`,
+  `${SPONSORS_BUCKET_BASE}/nanclares-fruteria.webp`,
+  `${SPONSORS_BUCKET_BASE}/grupo-verin.webp`,
+  `${SPONSORS_BUCKET_BASE}/joberma-electricidad.webp`,
+  `${SPONSORS_BUCKET_BASE}/peluqueria-rosa.webp`,
+  `${SPONSORS_BUCKET_BASE}/auto-subillabide.webp`,
+  `${SPONSORS_BUCKET_BASE}/izpia-mantenimientos.webp`,
+  `${SPONSORS_BUCKET_BASE}/bobbys-music-house.webp`,
+  `${SPONSORS_BUCKET_BASE}/cafe-kronos.webp`,
+  `${SPONSORS_BUCKET_BASE}/siglo-xxi.webp`,
+];
+
 const Home = () => {
   const [clubInfo, setClubInfo] = useState<Record<string, string>>({});
+  const [sponsorIndex, setSponsorIndex] = useState(0);
 
   useEffect(() => {
     const fetchClubInfo = async () => {
@@ -36,6 +58,14 @@ const Home = () => {
       }
     };
     fetchClubInfo();
+  }, []);
+
+  useEffect(() => {
+    if (SPONSOR_CAROUSEL_URLS.length <= 1) return;
+    const id = setInterval(() => {
+      setSponsorIndex((prev) => (prev + 1) % SPONSOR_CAROUSEL_URLS.length);
+    }, 3000);
+    return () => clearInterval(id);
   }, []);
 
   return (
@@ -134,6 +164,63 @@ const Home = () => {
                 </HoverCardContent>
               </HoverCard>
             ))}
+          </div>
+
+          <div className="max-w-6xl mx-auto mb-8 text-center">
+            <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-1 text-xs md:text-sm font-heading uppercase tracking-widest text-primary">
+              Impulsan Nuestro Proyecto
+            </span>
+            <h2 className="font-heading mt-4 text-3xl md:text-5xl font-bold uppercase tracking-tight text-primary">
+              Patrocinadores y Convenios
+            </h2>
+            <p className="mt-3 text-sm md:text-base text-muted-foreground max-w-3xl mx-auto">
+              Gracias al apoyo de entidades y empresas colaboradoras, seguimos creciendo temporada tras temporada.
+            </p>
+          </div>
+
+          <div className="max-w-6xl mx-auto mb-14 grid lg:grid-cols-2 gap-6">
+            <div className="rounded-3xl border border-primary/20 bg-gradient-to-br from-card via-card to-primary/5 p-4 md:p-6 shadow-lg">
+              <div className="mb-4 flex items-center justify-between">
+                <p className="font-heading text-sm md:text-base uppercase tracking-wider text-primary">Convenio Oficial</p>
+              </div>
+              <div className="relative w-full min-h-[300px] md:min-h-[420px]">
+                <img
+                  src={CONVENIO_ALAVES_URL}
+                  alt="Convenio C.D. Nanclares con Deportivo Alavés"
+                  className="absolute inset-0 w-full h-full object-contain rounded-2xl bg-white p-3"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-secondary/20 bg-gradient-to-br from-card via-card to-secondary/5 p-4 md:p-6 shadow-lg">
+              <div className="mb-4 flex items-center justify-between">
+                <p className="font-heading text-sm md:text-base uppercase tracking-wider text-primary">Empresas Colaboradoras</p>
+              </div>
+              <div className="relative w-full min-h-[300px] md:min-h-[420px] overflow-hidden rounded-2xl bg-white">
+                {SPONSOR_CAROUSEL_URLS.map((url, i) => (
+                  <img
+                    key={url}
+                    src={url}
+                    alt={`Patrocinador ${i + 1}`}
+                    className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-700 p-3 ${
+                      i === sponsorIndex ? "opacity-100" : "opacity-0"
+                    }`}
+                    loading="lazy"
+                  />
+                ))}
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
+                  {SPONSOR_CAROUSEL_URLS.map((_, i) => (
+                    <span
+                      key={i}
+                      className={`h-1.5 rounded-full transition-all ${
+                        i === sponsorIndex ? "w-6 bg-primary" : "w-2 bg-primary/30"
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Gallery */}
