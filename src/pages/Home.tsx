@@ -130,10 +130,10 @@ const Home = () => {
             <Link to="/inscripcion" className="glass-button bg-primary text-primary-foreground hover:bg-navy-light text-sm">
               ⚽ Quiero inscribir a un jugador
             </Link>
-            <Link to="/hazte-socio" className="glass-button border-secondary/40 hover:bg-secondary/20 text-sm">
+            <Link to="/hazte-socio" className="glass-button bg-primary text-primary-foreground hover:bg-navy-light text-sm">
               🤝 Quiero hacerme socio
             </Link>
-            <Link to="/tienda" className="glass-button border-secondary/40 hover:bg-secondary/20 text-sm">
+            <Link to="/tienda" className="glass-button bg-primary text-primary-foreground hover:bg-navy-light text-sm">
               🛒 Ver equipaciones y ropa
             </Link>
           </div>
