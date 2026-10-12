@@ -68,59 +68,71 @@ function euros(valor: number) {
   return new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(valor);
 }
 
+function unidades(cantidad: number) {
+  return cantidad === 1 ? "1 unidad" : `${cantidad} unidades`;
+}
+
 export async function notifyNewOrder(pedido: {
   cliente: ClienteDatos;
   articulos: ArticuloPedido[];
   total: number;
 }) {
   const { cliente, articulos, total } = pedido;
+  const nombre = `${cliente.nombre} ${cliente.apellidos}`.trim();
   const socio = cliente.es_socio
-    ? `Sí${cliente.numero_socio ? ` (nº ${cliente.numero_socio})` : ""}`
+    ? `Sí${cliente.numero_socio ? `, número ${cliente.numero_socio}` : ""}`
     : "No";
-  const lineas = articulos
-    .map(
-      (a) =>
-        `• ${a.nombre} | Talla ${a.talla} | ${a.cantidad} ud. × ${euros(a.precio)} = ${euros(a.precio * a.cantidad)}`,
-    )
+  const lineasTicket = articulos
+    .map((a) => `${a.nombre} — talla ${a.talla} — ${unidades(a.cantidad)} — ${euros(a.precio * a.cantidad)}`)
     .join("\n");
-  const texto = [
-    "Nuevo pedido de la tienda oficial del C.D. Nanclares.",
-    "",
-    `Cliente: ${cliente.nombre} ${cliente.apellidos}`,
-    `Email: ${cliente.email}`,
-    `Teléfono: ${cliente.telefono}`,
-    `DNI: ${cliente.dni}`,
-    `Socio: ${socio}`,
-    "",
-    "Artículos:",
-    lineas,
-    "",
-    `TOTAL: ${euros(total)}`,
-    cliente.observaciones ? `\nObservaciones: ${cliente.observaciones}` : "",
-    "",
-    "El pago se realiza al recoger el pedido en el club.",
-  ].join("\n");
 
+  const ticket: Record<string, string> = {
+    _subject: `Ticket de compra · ${nombre} · ${euros(total)}`,
+    _template: "box",
+    _captcha: "false",
+    _replyto: cliente.email,
+    email: cliente.email,
+    _autoresponse: [
+      `Hola ${cliente.nombre},`,
+      "",
+      "El C.D. Nanclares ya tiene tu pedido de equipación.",
+      "",
+      lineasTicket,
+      "",
+      `Total: ${euros(total)}`,
+      "",
+      "Te avisaremos cuando puedas pasar a recogerlo. El pago se hace en el club.",
+      "",
+      "Gracias.",
+    ].join("\n"),
+    Ticket: "Equipación oficial del C.D. Nanclares de la Oca",
+    Cliente: nombre,
+    Correo: cliente.email,
+    Teléfono: cliente.telefono,
+    DNI: cliente.dni,
+    Socio: socio,
+  };
+
+  articulos.forEach((a, indice) => {
+    ticket[`${indice + 1}. ${a.nombre}`] = `Talla ${a.talla} · ${unidades(a.cantidad)} · ${euros(a.precio * a.cantidad)}`;
+  });
+
+  ticket.Total = euros(total);
+  ticket.Pago = "Se abona al recoger la equipación en el club.";
+  const nota = cliente.observaciones?.trim();
+  if (nota) ticket.Nota = nota;
+
+  await enviarFormulario(ticket);
+}
+
+async function enviarFormulario(campos: Record<string, string>) {
   const res = await fetch(`https://formsubmit.co/ajax/${CLUB_EMAIL}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
     },
-    body: JSON.stringify({
-      _subject: `Pedido tienda — ${cliente.nombre} ${cliente.apellidos} — ${euros(total)}`,
-      _template: "box",
-      _captcha: "false",
-      _replyto: cliente.email,
-      _autoresponse: `Hola ${cliente.nombre}, el C.D. Nanclares ha recibido tu pedido de equipación (${euros(total)}). Te avisaremos cuando puedas recogerlo en el club. El pago se hace en la recogida.`,
-      nombre: `${cliente.nombre} ${cliente.apellidos}`,
-      email: cliente.email,
-      telefono: cliente.telefono,
-      dni: cliente.dni,
-      socio,
-      total: euros(total),
-      pedido: texto,
-    }),
+    body: JSON.stringify(campos),
   });
 
   const data = await res.json().catch(() => ({} as { success?: string | boolean; message?: string }));
