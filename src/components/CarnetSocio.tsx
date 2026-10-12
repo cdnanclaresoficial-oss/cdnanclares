@@ -74,25 +74,32 @@ function lineasDe(ctx: CanvasRenderingContext2D, texto: string, max: number) {
   return lineas.slice(0, 3);
 }
 
-function dibujarFotoCuadrada(ctx: CanvasRenderingContext2D, img: HTMLImageElement, x: number, y: number, lado: number) {
-  ctx.save();
-  ctx.shadowColor = "rgba(0,0,0,0.45)";
-  ctx.shadowBlur = 18;
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(x - 8, y - 8, lado + 16, lado + 16);
-  ctx.restore();
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(x, y, lado, lado);
-  ctx.clip();
+function dibujarFotoDifuminada(ctx: CanvasRenderingContext2D, img: HTMLImageElement, x: number, y: number, lado: number) {
+  const lienzo = document.createElement("canvas");
+  lienzo.width = lado;
+  lienzo.height = lado;
+  const g = lienzo.getContext("2d", { willReadFrequently: true });
+  if (!g) return;
+  g.imageSmoothingEnabled = true;
+  g.imageSmoothingQuality = "high";
   const cover = Math.max(lado / img.width, lado / img.height);
   const w = img.width * cover;
   const h = img.height * cover;
-  ctx.drawImage(img, x + (lado - w) / 2, y + (lado - h) / 2, w, h);
-  ctx.restore();
-  ctx.strokeStyle = "#f0c14d";
-  ctx.lineWidth = 5;
-  ctx.strokeRect(x, y, lado, lado);
+  g.drawImage(img, (lado - w) / 2, (lado - h) / 2, w, h);
+  const datos = g.getImageData(0, 0, lado, lado);
+  const pix = datos.data;
+  const borde = lado * 0.34;
+  for (let py = 0; py < lado; py++) {
+    for (let px = 0; px < lado; px++) {
+      const cerca = Math.min(px, py, lado - 1 - px, lado - 1 - py);
+      let t = cerca >= borde ? 1 : cerca / borde;
+      t = t * t * (3 - 2 * t);
+      const i = (py * lado + px) * 4;
+      pix[i + 3] = Math.round(pix[i + 3] * t);
+    }
+  }
+  g.putImageData(datos, 0, 0);
+  ctx.drawImage(lienzo, x, y);
 }
 
 function esBlancoSucio(pix: Uint8ClampedArray, i: number, minimo: number, croma: number) {
@@ -203,13 +210,28 @@ function escudoFundido(img: HTMLImageElement, alto: number) {
   return lienzo;
 }
 
-function dibujarEscudo(ctx: CanvasRenderingContext2D, img: HTMLImageElement, x: number, y: number, alto: number) {
+function dibujarEscudo(ctx: CanvasRenderingContext2D, img: HTMLImageElement, centroX: number, y: number, alto: number) {
   const recorte = escudoFundido(img, alto);
+  const lectura = recorte.getContext("2d", { willReadFrequently: true });
+  let centroOpaco = recorte.width / 2;
+  if (lectura) {
+    const pix = lectura.getImageData(0, 0, recorte.width, recorte.height).data;
+    let minX = recorte.width;
+    let maxX = 0;
+    for (let py = 0; py < recorte.height; py++) {
+      for (let px = 0; px < recorte.width; px++) {
+        if (pix[(py * recorte.width + px) * 4 + 3] < 28) continue;
+        if (px < minX) minX = px;
+        if (px > maxX) maxX = px;
+      }
+    }
+    if (maxX > minX) centroOpaco = (minX + maxX) / 2;
+  }
   ctx.save();
   ctx.shadowColor = "rgba(0,0,0,0.4)";
   ctx.shadowBlur = 22;
   ctx.shadowOffsetY = 6;
-  ctx.drawImage(recorte, x, y);
+  ctx.drawImage(recorte, centroX - centroOpaco, y);
   ctx.restore();
 }
 
@@ -306,7 +328,7 @@ async function pintarCarnet(canvas: HTMLCanvasElement, datos: DatosCarnet) {
   const fotoX = margen;
   const fotoY = 156;
   if (foto) {
-    dibujarFotoCuadrada(ctx, foto, fotoX, fotoY, fotoLado);
+    dibujarFotoDifuminada(ctx, foto, fotoX, fotoY, fotoLado);
   }
 
   const nombre = `${datos.nombre} ${datos.apellidos}`.replace(/\s+/g, " ").trim().toUpperCase();
@@ -320,7 +342,7 @@ async function pintarCarnet(canvas: HTMLCanvasElement, datos: DatosCarnet) {
   }
   const lineas = lineasDe(ctx, nombre, maxNombre);
   const altoLinea = tamanoNombre + 16;
-  const yNombre = foto ? fotoY + fotoLado + 78 : 280;
+  const yNombre = foto ? fotoY + fotoLado * 0.82 : 280;
   textoConSombra(ctx, () => {
     ctx.fillStyle = "#fff8ea";
     ctx.font = `700 ${tamanoNombre}px "Cinzel Decorative", serif`;
@@ -383,13 +405,12 @@ async function pintarCarnet(canvas: HTMLCanvasElement, datos: DatosCarnet) {
     ctx.fillText(`TEMPORADA ${temporadaActual()}`, margen, yNumero + 112);
   });
 
-  const altoEscudo = 390;
-  const anchoEscudo = altoEscudo * (escudo.width / escudo.height);
-  dibujarEscudo(ctx, escudo, ANCHO - 108 - anchoEscudo, 78, altoEscudo);
-
   const caja = 248;
   const cajaX = ANCHO - 72 - caja;
   const cajaY = ALTO - 72 - caja;
+  const altoEscudo = 360;
+  const centroQr = cajaX + caja / 2;
+  dibujarEscudo(ctx, escudo, centroQr, cajaY - 70 - altoEscudo, altoEscudo);
   ctx.save();
   ctx.shadowColor = "rgba(0,0,0,0.45)";
   ctx.shadowBlur = 28;
