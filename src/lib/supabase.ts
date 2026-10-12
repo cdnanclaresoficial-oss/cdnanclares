@@ -79,6 +79,17 @@ export const sociosService = {
       p_telefono_tutor: socio.telefono_tutor ?? null,
     });
     if (error) throw error;
+    const numero = typeof data === "number" ? data : Number(data);
+    if (Number.isFinite(numero) && numero < 26) {
+      const { data: corregido, error: errorNumero } = await supabase
+        .from("socios")
+        .update({ numero_socio: 26 })
+        .eq("dni", socio.dni)
+        .eq("numero_socio", numero)
+        .select("numero_socio")
+        .maybeSingle();
+      if (!errorNumero && corregido?.numero_socio) return corregido.numero_socio;
+    }
     return data;
   },
   async createConNumero(socio: Omit<import("@/types").Socio, "id" | "created_at">) {

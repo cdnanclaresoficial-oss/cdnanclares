@@ -3,6 +3,7 @@ import { Download } from "lucide-react";
 import QRCode from "qrcode";
 import { Button } from "@/components/ui/button";
 import fondoCarnet from "@/assets/fondo-carnet.jpg";
+import logoCdn from "@/assets/logo-cdn.jpg";
 
 const ANCHO = 2000;
 const ALTO = 1040;
@@ -73,6 +74,52 @@ function lineasDe(ctx: CanvasRenderingContext2D, texto: string, max: number) {
   return lineas.slice(0, 3);
 }
 
+function dibujarFotoFundida(ctx: CanvasRenderingContext2D, img: HTMLImageElement, cx: number, cy: number, radio: number) {
+  const lienzo = document.createElement("canvas");
+  const lado = Math.round(radio * 2);
+  lienzo.width = lado;
+  lienzo.height = lado;
+  const g = lienzo.getContext("2d");
+  if (!g) return;
+  const cover = Math.max(lado / img.width, lado / img.height);
+  const w = img.width * cover;
+  const h = img.height * cover;
+  g.drawImage(img, (lado - w) / 2, (lado - h) / 2, w, h);
+  g.globalCompositeOperation = "destination-in";
+  const mascara = g.createRadialGradient(radio, radio, radio * 0.42, radio, radio, radio);
+  mascara.addColorStop(0, "rgba(0,0,0,1)");
+  mascara.addColorStop(0.58, "rgba(0,0,0,0.92)");
+  mascara.addColorStop(0.82, "rgba(0,0,0,0.35)");
+  mascara.addColorStop(1, "rgba(0,0,0,0)");
+  g.fillStyle = mascara;
+  g.fillRect(0, 0, lado, lado);
+  ctx.drawImage(lienzo, cx - radio, cy - radio);
+}
+
+function dibujarEscudo(ctx: CanvasRenderingContext2D, img: HTMLImageElement, cx: number, cy: number, radio: number) {
+  ctx.save();
+  ctx.shadowColor = "rgba(0,0,0,0.4)";
+  ctx.shadowBlur = 16;
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath();
+  ctx.arc(cx, cy, radio, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, radio - 5, 0, Math.PI * 2);
+  ctx.clip();
+  const caja = (radio - 8) * 1.62;
+  const escala = Math.min(caja / img.width, caja / img.height);
+  ctx.drawImage(img, cx - (img.width * escala) / 2, cy - (img.height * escala) / 2, img.width * escala, img.height * escala);
+  ctx.restore();
+  ctx.strokeStyle = "#f0c14d";
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.arc(cx, cy, radio, 0, Math.PI * 2);
+  ctx.stroke();
+}
+
 function textoConSombra(ctx: CanvasRenderingContext2D, dibujar: () => void) {
   ctx.save();
   ctx.shadowColor = "rgba(0,0,0,0.72)";
@@ -90,8 +137,8 @@ async function pintarCarnet(canvas: HTMLCanvasElement, datos: DatosCarnet) {
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
 
-  await document.fonts.load("700 120px Oswald");
-  await document.fonts.load("600 64px Oswald");
+  await document.fonts.load("700 108px Oswald");
+  await document.fonts.load("700 64px Cinzel Decorative");
   await document.fonts.load("500 28px Oswald");
 
   const codigo = codigoQrSocio(datos);
@@ -102,9 +149,10 @@ async function pintarCarnet(canvas: HTMLCanvasElement, datos: DatosCarnet) {
     color: { dark: "#0b1024", light: "#ffffff" },
   });
 
-  const [fondo, qr, foto] = await Promise.all([
+  const [fondo, qr, escudo, foto] = await Promise.all([
     cargarImagen(fondoCarnet),
     cargarImagen(qrUrl),
+    cargarImagen(logoCdn),
     datos.foto ? cargarImagen(datos.foto).catch(() => null) : Promise.resolve(null),
   ]);
 
@@ -153,84 +201,76 @@ async function pintarCarnet(canvas: HTMLCanvasElement, datos: DatosCarnet) {
   redondear(ctx, 36, 36, ANCHO - 72, ALTO - 72, 26);
   ctx.stroke();
 
-  const margen = 86;
-  let cursorY = 150;
+  const margen = 96;
   textoConSombra(ctx, () => {
     ctx.fillStyle = "#f0c14d";
-    ctx.font = "500 30px Oswald, sans-serif";
+    ctx.font = "500 28px Oswald, sans-serif";
     ctx.textAlign = "left";
-    ctx.fillText("CARNET DE SOCIO", margen, cursorY);
+    ctx.fillText("CARNET DE SOCIO", margen, 128);
   });
 
+  const fotoRadio = 132;
+  const fotoY = 292;
   if (foto) {
-    const fotoX = margen + 108;
-    const fotoY = 310;
-    const fotoR = 108;
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(fotoX, fotoY, fotoR, 0, Math.PI * 2);
-    ctx.clip();
-    const cover = Math.max((fotoR * 2) / foto.width, (fotoR * 2) / foto.height);
-    ctx.drawImage(foto, fotoX - (foto.width * cover) / 2, fotoY - (foto.height * cover) / 2, foto.width * cover, foto.height * cover);
-    ctx.restore();
-    ctx.strokeStyle = "#f0c14d";
-    ctx.lineWidth = 8;
-    ctx.beginPath();
-    ctx.arc(fotoX, fotoY, fotoR, 0, Math.PI * 2);
-    ctx.stroke();
-    cursorY = 470;
-  } else {
-    cursorY = 250;
+    dibujarFotoFundida(ctx, foto, margen + fotoRadio, fotoY, fotoRadio);
   }
 
   const nombre = `${datos.nombre} ${datos.apellidos}`.replace(/\s+/g, " ").trim().toUpperCase();
-  let tamanoNombre = foto ? 52 : 64;
-  ctx.font = `600 ${tamanoNombre}px Oswald, sans-serif`;
-  const maxNombre = 560;
-  while (tamanoNombre > 34 && ctx.measureText(nombre).width > maxNombre * 1.8) {
+  let tamanoNombre = 58;
+  ctx.font = `700 ${tamanoNombre}px "Cinzel Decorative", serif`;
+  ctx.letterSpacing = "3px";
+  const maxNombre = 620;
+  while (tamanoNombre > 36 && ctx.measureText(nombre).width > maxNombre * 1.7) {
     tamanoNombre -= 2;
-    ctx.font = `600 ${tamanoNombre}px Oswald, sans-serif`;
+    ctx.font = `700 ${tamanoNombre}px "Cinzel Decorative", serif`;
   }
   const lineas = lineasDe(ctx, nombre, maxNombre);
+  const altoLinea = tamanoNombre + 16;
+  const yNombre = foto ? fotoY + fotoRadio + 128 : 300;
   textoConSombra(ctx, () => {
-    ctx.fillStyle = "#ffffff";
-    ctx.font = `600 ${tamanoNombre}px Oswald, sans-serif`;
+    ctx.fillStyle = "#fff8ea";
+    ctx.font = `700 ${tamanoNombre}px "Cinzel Decorative", serif`;
+    ctx.letterSpacing = "3px";
     ctx.textAlign = "left";
     lineas.forEach((linea, i) => {
-      ctx.fillText(linea, margen, cursorY + i * (tamanoNombre + 10));
+      ctx.fillText(linea, margen, yNombre + i * altoLinea);
     });
+    ctx.letterSpacing = "0px";
   });
+  ctx.letterSpacing = "0px";
 
-  const yLinea = cursorY + lineas.length * (tamanoNombre + 10) + 18;
+  const yLinea = yNombre + lineas.length * altoLinea + 8;
   ctx.strokeStyle = "#f0c14d";
-  ctx.lineWidth = 3;
+  ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(margen, yLinea);
-  ctx.lineTo(margen + 210, yLinea);
+  ctx.lineTo(margen + 240, yLinea);
   ctx.stroke();
 
-  const yNumero = yLinea + 54;
+  const yNumero = yLinea + 48;
   textoConSombra(ctx, () => {
     ctx.fillStyle = "#f0c14d";
-    ctx.font = "500 24px Oswald, sans-serif";
+    ctx.font = "500 22px Oswald, sans-serif";
     ctx.textAlign = "left";
     ctx.fillText("NÚMERO DE SOCIO", margen, yNumero);
     ctx.fillStyle = "#ffe08a";
-    ctx.font = "700 108px Oswald, sans-serif";
-    ctx.fillText(formatoNumeroSocio(datos.numero), margen, yNumero + 108);
+    ctx.font = "700 92px Oswald, sans-serif";
+    ctx.fillText(formatoNumeroSocio(datos.numero), margen, yNumero + 96);
     ctx.fillStyle = "rgba(255,255,255,0.92)";
-    ctx.font = "500 28px Oswald, sans-serif";
-    ctx.fillText(`TEMPORADA ${temporadaActual()}`, margen, yNumero + 164);
+    ctx.font = "500 26px Oswald, sans-serif";
+    ctx.fillText(`TEMPORADA ${temporadaActual()}`, margen, yNumero + 146);
     if (datos.cuota) {
       ctx.fillStyle = "#f0c14d";
-      ctx.font = "500 26px Oswald, sans-serif";
-      ctx.fillText(datos.cuota.toUpperCase(), margen, yNumero + 206);
+      ctx.font = "500 24px Oswald, sans-serif";
+      ctx.fillText(datos.cuota.toUpperCase(), margen, yNumero + 184);
     }
   });
 
-  const caja = 360;
+  dibujarEscudo(ctx, escudo, ANCHO - 188, 150, 96);
+
+  const caja = 292;
   const cajaX = ANCHO - margen - caja;
-  const cajaY = (ALTO - caja) / 2 - 10;
+  const cajaY = 300;
   ctx.save();
   ctx.shadowColor = "rgba(0,0,0,0.45)";
   ctx.shadowBlur = 28;
