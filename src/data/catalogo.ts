@@ -1,7 +1,7 @@
 import type { Producto } from "@/types";
 
 export const TALLAS_ROPA = ["8XS", "7XS", "6XS", "5XS", "4XS", "3XS", "2XS", "XS", "S", "M", "L", "XL", "2XL"];
-export const TALLAS_MEDIAS = ["S -39", "M 39-42", "L +42"];
+export const TALLAS_MEDIAS = ["S hasta 39", "M 39 a 42", "L +42"];
 
 const ropa = (
   partial: Omit<Producto, "tallas" | "precio"> & { tallas?: string[] },
