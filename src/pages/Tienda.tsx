@@ -3,7 +3,6 @@ import { Check, Minus, Plus, ShoppingCart, X } from "lucide-react";
 import { z } from "zod";
 import { pedidosService } from "@/lib/supabase";
 import { notifyNewOrder } from "@/services/notifications";
-import StoreChat from "@/components/StoreChat";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,6 +38,7 @@ const Tienda = () => {
   const [tallasSeleccionadas, setTallasSeleccionadas] = useState<Record<string, string>>({});
   const [mediasSeleccionadas, setMediasSeleccionadas] = useState<Record<string, string>>({});
   const [showCheckout, setShowCheckout] = useState(false);
+  const [pedidoListo, setPedidoListo] = useState<{ titulo: string; detalle: string } | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [formData, setFormData] = useState({ nombre: "", apellidos: "", dni: "", email: "", telefono: "" });
   const [numeroSocio, setNumeroSocio] = useState("");
@@ -168,18 +168,17 @@ const Tienda = () => {
     setNumeroSocio("");
     setObservaciones("");
 
-    if (avisado) {
-      toast({
-        title: "Pedido enviado",
-        description: "El club ya tiene tu pedido. Te avisaremos por email cuando puedas recogerlo.",
-      });
-      return;
-    }
-
-    toast({
-      title: "Pedido registrado",
-      description: "Ha quedado guardado en el club. Si no recibes confirmación, escribe a cdnanclares.oficial@gmail.com.",
-    });
+    setPedidoListo(
+      avisado
+        ? {
+            titulo: "Pedido enviado",
+            detalle: "El club ya tiene tu pedido. Te avisaremos por email cuando puedas recogerlo.",
+          }
+        : {
+            titulo: "Pedido registrado",
+            detalle: "Ha quedado guardado en el club. Si no recibes confirmación, escribe a cdnanclares.oficial@gmail.com.",
+          },
+    );
   };
 
   return (
@@ -283,7 +282,7 @@ const Tienda = () => {
       </div>
 
       {carrito.length > 0 && !showCheckout && (
-        <div className="fixed bottom-4 left-4 right-24 z-40">
+        <div className="fixed bottom-4 left-4 right-4 z-40">
           <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 rounded-2xl border border-border bg-card/95 px-4 py-3 shadow-2xl backdrop-blur">
             <div className="flex items-center gap-3 min-w-0">
               <ShoppingCart className="text-secondary shrink-0" size={22} />
@@ -304,10 +303,38 @@ const Tienda = () => {
         </div>
       )}
 
-      <StoreChat />
+      {pedidoListo && <ConfirmacionPedido titulo={pedidoListo.titulo} detalle={pedidoListo.detalle} onClose={() => setPedidoListo(null)} />}
     </main>
   );
 };
+
+function ConfirmacionPedido({ titulo, detalle, onClose }: { titulo: string; detalle: string; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-[radial-gradient(circle_at_top,_#e53935_0%,_#1a2744_42%,_#0c1730_100%)]">
+      <div className="w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl text-center">
+        <div className="bg-gradient-to-br from-[#1a2744] via-[#243864] to-[#c62828] px-8 py-10">
+          <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-white text-[#c62828] shadow-lg">
+            <Check size={40} strokeWidth={3} />
+          </div>
+          <p className="font-heading text-xs uppercase tracking-[0.28em] text-white/80">C.D. Nanclares de la Oca</p>
+          <h2 className="mt-3 font-heading text-4xl font-bold uppercase tracking-tight text-white">{titulo}</h2>
+        </div>
+        <div className="space-y-5 px-8 py-8">
+          <p className="text-lg leading-relaxed text-[#1a2744]">{detalle}</p>
+          <p className="rounded-2xl border border-[#f3c1c1] bg-[#fff4f4] px-5 py-4 text-base font-semibold leading-relaxed text-[#9b1b1b]">
+            El pago se realizará en las instalaciones del club a la hora de recoger la ropa.
+          </p>
+          <Button
+            onClick={onClose}
+            className="h-12 w-full bg-[#1a2744] font-heading uppercase tracking-wider text-white hover:bg-[#c62828]"
+          >
+            Seguir en la tienda
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function Precios({ producto, esSocio }: { producto: Producto; esSocio: boolean }) {
   const mismo = producto.precioSocio === producto.precioNoSocio;
