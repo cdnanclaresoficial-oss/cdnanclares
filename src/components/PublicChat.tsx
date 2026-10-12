@@ -5,7 +5,7 @@ import { X, Send, User, Maximize2, Minimize2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import logoCdn from "@/assets/logo-cdn.jpg";
 import { supabase } from "@/lib/supabase";
-import { instruccionesTienda, resumenCatalogo } from "@/data/catalogo";
+import { instruccionesTienda, responderTiendaLocal, resumenCatalogo } from "@/data/catalogo";
 
 interface Message {
   role: "user" | "assistant";
@@ -20,6 +20,21 @@ interface PublicChatProps {
   assistantName?: string;
   assistantSubtitle?: string;
   includeShopCatalog?: boolean;
+}
+
+function respuestaDeError(payload: unknown) {
+  const raw = typeof payload === "string" ? payload : JSON.stringify(payload ?? "");
+  return /rate limit|rate_limited|too many requests|"code"\s*:\s*"?1300|raw_status_code"\s*:\s*429|error de conexi[oó]n/i.test(raw);
+}
+
+function extraerRespuesta(data: { answer?: string; text?: string; response?: string } | null) {
+  const reply = data?.answer || data?.text || data?.response;
+  return typeof reply === "string" ? reply.trim() : "";
+}
+
+function respuestaSiFalla(pregunta: string, modo: string) {
+  if (modo === "tienda") return responderTiendaLocal(pregunta);
+  return "El asistente automático está saturado en este momento. Prueba otra vez dentro de unos minutos.";
 }
 
 const FACTUAL_GUARDRAILS = [
@@ -146,11 +161,18 @@ const PublicChat = ({
             : {}),
         }),
       });
-      const data = await res.json();
-      const reply = data.answer || data.text || data.response || JSON.stringify(data);
-      setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
-    } catch (err: any) {
-      setMessages((prev) => [...prev, { role: "assistant", content: `Error de conexión: ${err?.message || "desconocido"}` }]);
+      const data = await res.json().catch(() => null);
+      const reply = extraerRespuesta(data);
+      const fallo = !res.ok || !reply || respuestaDeError(reply) || respuestaDeError(data);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: fallo ? respuestaSiFalla(text, mode) : reply,
+        },
+      ]);
+    } catch {
+      setMessages((prev) => [...prev, { role: "assistant", content: respuestaSiFalla(text, mode) }]);
     } finally {
       setLoading(false);
     }

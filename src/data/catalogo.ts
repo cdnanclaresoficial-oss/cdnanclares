@@ -210,3 +210,57 @@ export const resumenCatalogo = CATALOGO.map((p) => ({
 export function precioTarifa(producto: Producto, esSocio: boolean) {
   return esSocio ? producto.precioSocio : producto.precioNoSocio;
 }
+
+function euros(valor: number) {
+  return new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(valor);
+}
+
+function normalizar(texto: string) {
+  return texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+function fichaProducto(producto: Producto) {
+  const precio =
+    producto.precioSocio === producto.precioNoSocio
+      ? `${euros(producto.precioSocio)} para socios y no socios`
+      : `socio ${euros(producto.precioSocio)}, no socio ${euros(producto.precioNoSocio)}`;
+  const tallas = producto.seleccionarMedias
+    ? `Talla de equipación: ${producto.tallas.join(", ")}. Talla de medias: ${TALLAS_MEDIAS.join(", ")}.`
+    : `Tallas: ${producto.tallas.join(", ")}.`;
+  const incluye = producto.incluye?.length ? ` Incluye: ${producto.incluye.join(", ")}.` : "";
+  return `${producto.nombre}: ${precio}. ${tallas}${incluye}`;
+}
+
+export function responderTiendaLocal(pregunta: string) {
+  const consulta = normalizar(pregunta);
+
+  if (/media|calcetin/.test(consulta)) {
+    const medias = CATALOGO.find((p) => p.id === "medias-juego")!;
+    return fichaProducto(medias);
+  }
+
+  if (/pack/.test(consulta)) {
+    return fichaProducto(CATALOGO.find((p) => p.id === "pack-club")!);
+  }
+
+  if (/talla/.test(consulta)) {
+    return `La ropa va en estas tallas: ${TALLAS_ROPA.join(", ")}. Las medias: ${TALLAS_MEDIAS.join(", ")}. Mochila, peto y zapatillero son talla única.`;
+  }
+
+  if (/pago|pagar|tarjeta|recoger|pedido|email|correo/.test(consulta)) {
+    return "El pedido se confirma en la tienda, con talla y tarifa de socio o no socio. No se cobra con tarjeta. El club lo recibe por email y quien compra recibe la confirmación. El pago se hace al recoger la equipación en el club.";
+  }
+
+  const coincidencias = CATALOGO.filter((producto) => {
+    const nombre = normalizar(producto.nombre);
+    const palabras = nombre.split(" ").filter((palabra) => palabra.length > 3);
+    return consulta.includes(nombre) || palabras.some((palabra) => consulta.includes(palabra));
+  });
+
+  if (coincidencias.length > 0) {
+    return coincidencias.map(fichaProducto).join("\n\n");
+  }
+
+  const lista = CATALOGO.map((producto) => producto.nombre).join(", ");
+  return `Puedo decirte el precio y la talla de la equipación oficial: ${lista}.`;
+}
