@@ -410,7 +410,7 @@ async function pintarCarnet(canvas: HTMLCanvasElement, datos: DatosCarnet) {
   const cajaY = ALTO - 72 - caja;
   const altoEscudo = 360;
   const centroQr = cajaX + caja / 2;
-  dibujarEscudo(ctx, escudo, centroQr, cajaY - 70 - altoEscudo, altoEscudo);
+  dibujarEscudo(ctx, escudo, centroQr, 48, altoEscudo);
   ctx.save();
   ctx.shadowColor = "rgba(0,0,0,0.45)";
   ctx.shadowBlur = 28;
