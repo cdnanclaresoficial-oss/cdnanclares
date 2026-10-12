@@ -31,7 +31,7 @@ export const CATALOGO: Producto[] = [
       "2 culotes",
       "2 pares de medias",
       "1 peto reversible",
-      "Bolsa",
+      "Mochila",
     ],
   }),
   ropa({
@@ -164,11 +164,21 @@ export const CATALOGO: Producto[] = [
   }),
   ropa({
     id: "mochila",
-    nombre: "Bolsa",
-    descripcion: "Bolsa oficial Joma con el escudo y el nombre del club. Talla única.",
+    nombre: "Mochila",
+    descripcion: "Mochila oficial Joma con el escudo y el nombre del club. Talla única.",
     precioSocio: 30,
     precioNoSocio: 35,
     imagen: "/tienda/mochila.jpg",
+    categoria: "Accesorios",
+    tallas: ["Única"],
+  }),
+  ropa({
+    id: "mochila-pequena",
+    nombre: "Mochila pequeña",
+    descripcion: "Mochila pequeña oficial del club, con el escudo de Nanclares. Talla única.",
+    precioSocio: 10,
+    precioNoSocio: 15,
+    imagen: "/tienda/mochila-pequena.jpg",
     categoria: "Accesorios",
     tallas: ["Única"],
   }),
@@ -191,8 +201,8 @@ export const instruccionesTienda = [
   "Hay dos tarifas: socio y no socio. En la tienda se elige una y el carrito usa ese precio.",
   `Tallas de ropa: ${TALLAS_ROPA.join(", ")}.`,
   `Tallas de medias: ${TALLAS_MEDIAS.join(", ")}.`,
-  "Bolsa, peto y zapatillero son talla única.",
-  "El Pack Club cuesta 230 € con IVA incluido, el mismo precio para socios y no socios. Hay que elegir talla de equipación y talla de medias. Incluye anorak, 2 camisetas azules, 1 camiseta blanca, sudadera con media cremallera, chaqueta de chándal, pantalón de chándal, 2 culotes, 2 pares de medias, 1 peto reversible y bolsa.",
+  "Mochila, mochila pequeña, peto y zapatillero son talla única.",
+  "El Pack Club cuesta 230 € con IVA incluido, el mismo precio para socios y no socios. Hay que elegir talla de equipación y talla de medias. Incluye anorak, 2 camisetas azules, 1 camiseta blanca, sudadera con media cremallera, chaqueta de chándal, pantalón de chándal, 2 culotes, 2 pares de medias, 1 peto reversible y mochila.",
   "No se paga con tarjeta en la web. El pedido se confirma en la tienda, el club lo recibe por email y quien compra recibe confirmación. El pago se hace al recoger la equipación en el club.",
 ].join(" ");
 
@@ -244,7 +254,7 @@ export function responderTiendaLocal(pregunta: string) {
   }
 
   if (/talla/.test(consulta)) {
-    return `La ropa va en estas tallas: ${TALLAS_ROPA.join(", ")}. Las medias: ${TALLAS_MEDIAS.join(", ")}. Bolsa, peto y zapatillero son talla única.`;
+    return `La ropa va en estas tallas: ${TALLAS_ROPA.join(", ")}. Las medias: ${TALLAS_MEDIAS.join(", ")}. Mochila, mochila pequeña, peto y zapatillero son talla única.`;
   }
 
   if (/pago|pagar|tarjeta|recoger|pedido|email|correo/.test(consulta)) {
