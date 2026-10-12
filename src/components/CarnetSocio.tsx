@@ -324,9 +324,9 @@ async function pintarCarnet(canvas: HTMLCanvasElement, datos: DatosCarnet) {
     ctx.fillText("CARNET DE SOCIO", margen, 128);
   });
 
-  const fotoLado = 320;
+  const fotoLado = 250;
   const fotoX = margen;
-  const fotoY = 156;
+  const fotoY = 148;
   if (foto) {
     dibujarFotoDifuminada(ctx, foto, fotoX, fotoY, fotoLado);
   }
@@ -342,7 +342,7 @@ async function pintarCarnet(canvas: HTMLCanvasElement, datos: DatosCarnet) {
   }
   const lineas = lineasDe(ctx, nombre, maxNombre);
   const altoLinea = tamanoNombre + 16;
-  const yNombre = foto ? fotoY + fotoLado * 0.82 : 280;
+  const yNombre = foto ? fotoY + fotoLado + 72 : 280;
   textoConSombra(ctx, () => {
     ctx.fillStyle = "#fff8ea";
     ctx.font = `700 ${tamanoNombre}px "Cinzel Decorative", serif`;
