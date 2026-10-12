@@ -317,9 +317,9 @@ async function pintarCarnet(canvas: HTMLCanvasElement, datos: DatosCarnet) {
   redondear(ctx, 36, 36, ANCHO - 72, ALTO - 72, 26);
   ctx.stroke();
 
-  const fotoLado = 250;
-  const fotoX = 156;
-  const fotoY = 168;
+  const fotoLado = 330;
+  const fotoX = 132;
+  const fotoY = 146;
   const centroFoto = fotoX + fotoLado / 2;
   textoConSombra(ctx, () => {
     ctx.fillStyle = "#f0c14d";
@@ -347,7 +347,7 @@ async function pintarCarnet(canvas: HTMLCanvasElement, datos: DatosCarnet) {
     lineas = lineasDe(ctx, nombre, maxNombre);
   }
   const altoLinea = tamanoNombre + 16;
-  const yNombre = foto ? fotoY + fotoLado + 118 : 300;
+  const yNombre = foto ? fotoY + fotoLado + 72 : 300;
   textoConSombra(ctx, () => {
     ctx.fillStyle = "#fff8ea";
     ctx.font = `700 ${tamanoNombre}px "Cinzel Decorative", serif`;
@@ -393,7 +393,7 @@ async function pintarCarnet(canvas: HTMLCanvasElement, datos: DatosCarnet) {
       ctx.font = "700 40px Oswald, sans-serif";
       ctx.fillText(etiqueta, fotoX, yBloque + 44);
     });
-    yBloque += 118;
+    yBloque += 96;
   }
 
   const yNumero = yBloque;
@@ -403,11 +403,11 @@ async function pintarCarnet(canvas: HTMLCanvasElement, datos: DatosCarnet) {
     ctx.textAlign = "left";
     ctx.fillText("NÚMERO DE SOCIO", fotoX, yNumero);
     ctx.fillStyle = "#ffe08a";
-    ctx.font = "700 72px Oswald, sans-serif";
-    ctx.fillText(formatoNumeroSocio(datos.numero), fotoX, yNumero + 74);
+    ctx.font = "700 64px Oswald, sans-serif";
+    ctx.fillText(formatoNumeroSocio(datos.numero), fotoX, yNumero + 66);
     ctx.fillStyle = "rgba(255,255,255,0.92)";
-    ctx.font = "500 24px Oswald, sans-serif";
-    ctx.fillText(`TEMPORADA ${temporadaActual()}`, fotoX, yNumero + 112);
+    ctx.font = "500 22px Oswald, sans-serif";
+    ctx.fillText(`TEMPORADA ${temporadaActual()}`, fotoX, yNumero + 98);
   });
 
   const caja = 248;
