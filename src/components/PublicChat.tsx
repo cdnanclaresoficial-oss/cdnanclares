@@ -5,7 +5,7 @@ import { X, Send, User, Maximize2, Minimize2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import logoCdn from "@/assets/logo-cdn.jpg";
 import { supabase } from "@/lib/supabase";
-import { resumenCatalogo } from "@/data/catalogo";
+import { instruccionesTienda, resumenCatalogo } from "@/data/catalogo";
 
 interface Message {
   role: "user" | "assistant";
@@ -75,8 +75,7 @@ const PublicChat = ({
 
     setShopCatalogContext(
       JSON.stringify({
-        instrucciones:
-          "Estos son los precios oficiales. Hay tarifa de socio y de no socio. El pago es al recoger en el club. El pack club cuesta 230 €, IVA incluido, para todos.",
+        instrucciones: instruccionesTienda,
         productos: resumenCatalogo,
       }),
     );

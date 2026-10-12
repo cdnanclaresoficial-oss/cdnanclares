@@ -186,12 +186,23 @@ export const CATALOGO: Producto[] = [
 
 export const CATEGORIAS_TIENDA = ["Todas", "Pack", "Paseo", "Entrenamiento", "Juego", "Accesorios"] as const;
 
+export const instruccionesTienda = [
+  "Eres el asistente de la tienda oficial del C.D. Nanclares. Responde solo con esta equipación. Si preguntan por un artículo que no está en el catálogo, di que no está a la venta.",
+  "Hay dos tarifas: socio y no socio. En la tienda se elige una y el carrito usa ese precio.",
+  `Tallas de ropa: ${TALLAS_ROPA.join(", ")}.`,
+  `Tallas de medias: ${TALLAS_MEDIAS.join(", ")}.`,
+  "Mochila, peto y zapatillero son talla única.",
+  "El Pack Club cuesta 230 € con IVA incluido, el mismo precio para socios y no socios. Hay que elegir talla de equipación y talla de medias. Incluye anorak, 2 camisetas azules, 1 camiseta blanca, sudadera con media cremallera, chaqueta de chándal, pantalón de chándal, 2 culotes, 2 pares de medias, 1 peto reversible y mochila.",
+  "No se paga con tarjeta en la web. El pedido se confirma en la tienda, el club lo recibe por email y quien compra recibe confirmación. El pago se hace al recoger la equipación en el club.",
+].join(" ");
+
 export const resumenCatalogo = CATALOGO.map((p) => ({
   nombre: p.nombre,
   categoria: p.categoria,
   precioSocio: p.precioSocio,
   precioNoSocio: p.precioNoSocio,
   tallas: p.tallas,
+  tallasMedias: p.seleccionarMedias ? TALLAS_MEDIAS : null,
   descripcion: p.descripcion,
   incluye: p.incluye ?? null,
 }));
