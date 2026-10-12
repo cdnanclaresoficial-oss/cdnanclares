@@ -60,6 +60,28 @@ const INITIAL = {
   telefono_tutor: "",
 };
 
+function leerFoto(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("No se pudo leer la foto"));
+    reader.onload = () => {
+      const imagen = new Image();
+      imagen.onerror = () => reject(new Error("La foto no es válida"));
+      imagen.onload = () => {
+        const maximo = 900;
+        const escala = Math.min(1, maximo / Math.max(imagen.width, imagen.height));
+        const lienzo = document.createElement("canvas");
+        lienzo.width = Math.max(1, Math.round(imagen.width * escala));
+        lienzo.height = Math.max(1, Math.round(imagen.height * escala));
+        lienzo.getContext("2d")?.drawImage(imagen, 0, 0, lienzo.width, lienzo.height);
+        resolve(lienzo.toDataURL("image/jpeg", 0.9));
+      };
+      imagen.src = String(reader.result);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 const CAMPOS = [
   { key: "nombre", label: "Nombre" },
   { key: "primer_apellido", label: "Primer apellido" },
@@ -88,7 +110,8 @@ const SociosTab = ({ socios, onRefresh }: SociosTabProps) => {
   const [cuotaId, setCuotaId] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [guardando, setGuardando] = useState(false);
-  const [carnet, setCarnet] = useState<{ nombre: string; apellidos: string; numero: string; cuota: string } | null>(null);
+  const [foto, setFoto] = useState<string | null>(null);
+  const [carnet, setCarnet] = useState<{ nombre: string; apellidos: string; numero: string; cuota: string; foto: string | null } | null>(null);
 
   const ocupados = useMemo(() => new Set(socios.map((s) => Number(s.numero_socio))), [socios]);
   const libres = useMemo(
@@ -189,16 +212,30 @@ const SociosTab = ({ socios, onRefresh }: SociosTabProps) => {
           variant: "destructive",
         });
       }
-      setCarnet({ nombre, apellidos, numero: numeroTexto, cuota: textoCuota(cuota.id) });
+      setCarnet({ nombre, apellidos, numero: numeroTexto, cuota: textoCuota(cuota.id), foto });
       setForm(INITIAL);
       setNumero("");
       setCuotaId("");
+      setFoto(null);
       setErrors({});
       onRefresh();
     } catch (err: any) {
       toast({ title: "No se pudo guardar el socio", description: err.message, variant: "destructive" });
     } finally {
       setGuardando(false);
+    }
+  };
+
+  const elegirFoto = async (file?: File) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Elige una imagen", variant: "destructive" });
+      return;
+    }
+    try {
+      setFoto(await leerFoto(file));
+    } catch (err: any) {
+      toast({ title: "No se pudo usar la foto", description: err.message, variant: "destructive" });
     }
   };
 
@@ -218,28 +255,50 @@ const SociosTab = ({ socios, onRefresh }: SociosTabProps) => {
         <form onSubmit={guardar} className="mb-6 rounded-xl border border-border bg-card p-6">
           <h2 className="font-heading text-xl uppercase tracking-wide text-primary">Meter socios del 1 al 25</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Elige el número, la cuota (individual, familiar o familia numerosa) y guarda. Quedan {libres.length} números libres.
+            Elige un número del 1 al 25, la cuota y, si quieres, la foto del carnet. Quedan {libres.length} números libres.
           </p>
+          <div className="mt-4">
+            <Label className="text-sm font-semibold text-primary">Número de socio</Label>
+            <div className={`mt-2 grid grid-cols-5 gap-2 sm:grid-cols-10 ${errors.numero ? "rounded-md ring-2 ring-destructive" : ""}`}>
+              {Array.from({ length: NUMEROS_SOCIO_RESERVADOS }, (_, i) => i + 1).map((n) => {
+                const ocupado = ocupados.has(n);
+                const elegido = numero === String(n);
+                return (
+                  <button
+                    key={n}
+                    type="button"
+                    disabled={ocupado}
+                    onClick={() => {
+                      setNumero(String(n));
+                      setErrors((prev) => {
+                        if (!prev.numero) return prev;
+                        const next = { ...prev };
+                        delete next.numero;
+                        return next;
+                      });
+                    }}
+                    className={`h-10 rounded-md border font-heading text-sm ${
+                      elegido
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : ocupado
+                          ? "cursor-not-allowed border-border bg-muted text-muted-foreground line-through"
+                          : "border-input bg-background text-primary hover:border-primary"
+                    }`}
+                  >
+                    {n}
+                  </button>
+                );
+              })}
+            </div>
+            {errors.numero && <p className="mt-1 text-xs text-destructive">{errors.numero}</p>}
+            <p className="mt-2 text-xs text-muted-foreground">Los tachados ya están asignados.</p>
+          </div>
           {libres.length === 0 ? (
             <p className="mt-4 text-sm font-semibold text-secondary">Los 25 números reservados ya están asignados.</p>
           ) : (
             <>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <div>
-                  <Label className="text-sm font-semibold text-primary">Número de socio</Label>
-                  <select
-                    value={numero}
-                    onChange={(e) => setNumero(e.target.value)}
-                    className={`mt-1 flex h-10 w-full rounded-md border bg-background px-3 text-sm ${errors.numero ? "border-destructive" : "border-input"}`}
-                  >
-                    <option value="">Elegir</option>
-                    {libres.map((n) => (
-                      <option key={n} value={n}>{n}</option>
-                    ))}
-                  </select>
-                  {errors.numero && <p className="mt-1 text-xs text-destructive">{errors.numero}</p>}
-                </div>
-                <div>
+                <div className="sm:col-span-2">
                   <Label className="text-sm font-semibold text-primary">Cuota</Label>
                   <select
                     value={cuotaId}
@@ -266,6 +325,38 @@ const SociosTab = ({ socios, onRefresh }: SociosTabProps) => {
                     {errors[field.key] && <p className="mt-1 text-xs text-destructive">{errors[field.key]}</p>}
                   </div>
                 ))}
+              </div>
+              <div className="mt-6 rounded-xl border border-dashed border-border p-4">
+                <Label className="text-sm font-semibold text-primary">Foto (opcional)</Label>
+                <p className="mt-1 text-xs text-muted-foreground">Si no eliges foto, el carnet llevará la oca del club.</p>
+                <div className="mt-3 flex items-center gap-4">
+                  {foto ? (
+                    <img src={foto} alt="Foto para el carnet" className="h-24 w-24 object-cover border-2 border-primary" />
+                  ) : (
+                    <div className="flex h-24 w-24 items-center justify-center bg-primary text-[10px] font-heading uppercase tracking-wider text-primary-foreground">
+                      Oca
+                    </div>
+                  )}
+                  <div className="flex flex-col gap-2">
+                    <label className="inline-flex h-10 cursor-pointer items-center justify-center rounded-md bg-primary px-4 font-heading text-sm uppercase tracking-wider text-primary-foreground">
+                      Elegir foto
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="sr-only"
+                        onChange={(e) => {
+                          void elegirFoto(e.target.files?.[0]);
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+                    {foto && (
+                      <button type="button" onClick={() => setFoto(null)} className="text-left text-xs font-semibold text-secondary">
+                        Quitar foto
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
               <Button type="submit" disabled={guardando} className="mt-6 bg-primary font-heading uppercase tracking-wider text-primary-foreground">
                 {guardando ? "Guardando..." : "Guardar socio"}
@@ -325,7 +416,7 @@ const SociosTab = ({ socios, onRefresh }: SociosTabProps) => {
           nombre={carnet.nombre}
           apellidos={carnet.apellidos}
           numero={carnet.numero}
-          foto={null}
+          foto={carnet.foto}
           cuota={carnet.cuota}
           onClose={() => setCarnet(null)}
         />
