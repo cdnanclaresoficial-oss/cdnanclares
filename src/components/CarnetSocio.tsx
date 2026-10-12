@@ -88,7 +88,7 @@ function dibujarFotoDifuminada(ctx: CanvasRenderingContext2D, img: HTMLImageElem
   g.drawImage(img, (lado - w) / 2, (lado - h) / 2, w, h);
   const datos = g.getImageData(0, 0, lado, lado);
   const pix = datos.data;
-  const borde = lado * 0.34;
+  const borde = lado * 0.14;
   for (let py = 0; py < lado; py++) {
     for (let px = 0; px < lado; px++) {
       const cerca = Math.min(px, py, lado - 1 - px, lado - 1 - py);
