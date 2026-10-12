@@ -95,28 +95,122 @@ function dibujarFotoCuadrada(ctx: CanvasRenderingContext2D, img: HTMLImageElemen
   ctx.strokeRect(x, y, lado, lado);
 }
 
-function dibujarEscudo(ctx: CanvasRenderingContext2D, img: HTMLImageElement, cx: number, cy: number, radio: number) {
+function esBlancoSucio(pix: Uint8ClampedArray, i: number, minimo: number, croma: number) {
+  const r = pix[i];
+  const g = pix[i + 1];
+  const b = pix[i + 2];
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  return max >= minimo && max - min <= croma;
+}
+
+function escudoFundido(img: HTMLImageElement, alto: number) {
+  const ancho = Math.max(1, Math.round(alto * (img.width / img.height)));
+  const lienzo = document.createElement("canvas");
+  lienzo.width = ancho;
+  lienzo.height = alto;
+  const g = lienzo.getContext("2d", { willReadFrequently: true });
+  if (!g) return lienzo;
+  g.imageSmoothingEnabled = true;
+  g.imageSmoothingQuality = "high";
+  g.drawImage(img, 0, 0, ancho, alto);
+  const datos = g.getImageData(0, 0, ancho, alto);
+  const pix = datos.data;
+  const visto = new Uint8Array(ancho * alto);
+  const cola: number[] = [];
+  const sembrar = (x: number, y: number) => {
+    const p = y * ancho + x;
+    if (visto[p] || !esBlancoSucio(pix, p * 4, 214, 22)) return;
+    visto[p] = 1;
+    cola.push(p);
+  };
+  for (let x = 0; x < ancho; x++) {
+    sembrar(x, 0);
+    sembrar(x, alto - 1);
+  }
+  for (let y = 0; y < alto; y++) {
+    sembrar(0, y);
+    sembrar(ancho - 1, y);
+  }
+  for (let n = 0; n < cola.length; n++) {
+    const p = cola[n];
+    pix[p * 4 + 3] = 0;
+    const x = p % ancho;
+    const y = (p - x) / ancho;
+    if (x + 1 < ancho) sembrar(x + 1, y);
+    if (x > 0) sembrar(x - 1, y);
+    if (y + 1 < alto) sembrar(x, y + 1);
+    if (y > 0) sembrar(x, y - 1);
+  }
+  for (let pasada = 0; pasada < 10; pasada++) {
+    const quitar: number[] = [];
+    for (let y = 1; y < alto - 1; y++) {
+      for (let x = 1; x < ancho - 1; x++) {
+        const p = y * ancho + x;
+        const i = p * 4;
+        if (pix[i + 3] === 0 || !esBlancoSucio(pix, i, 176, 28)) continue;
+        const borde =
+          pix[((p - 1) * 4) + 3] === 0 ||
+          pix[((p + 1) * 4) + 3] === 0 ||
+          pix[((p - ancho) * 4) + 3] === 0 ||
+          pix[((p + ancho) * 4) + 3] === 0;
+        if (borde) quitar.push(p);
+      }
+    }
+    quitar.forEach((p) => {
+      pix[p * 4 + 3] = 0;
+    });
+  }
+  const alfa = new Float32Array(ancho * alto);
+  for (let i = 0; i < alfa.length; i++) alfa[i] = pix[i * 4 + 3];
+  const tmp = new Float32Array(ancho * alto);
+  const radio = 2;
+  for (let y = 0; y < alto; y++) {
+    for (let x = 0; x < ancho; x++) {
+      let suma = 0;
+      let n = 0;
+      for (let k = -radio; k <= radio; k++) {
+        const xx = x + k;
+        if (xx < 0 || xx >= ancho) continue;
+        suma += alfa[y * ancho + xx];
+        n++;
+      }
+      tmp[y * ancho + x] = suma / n;
+    }
+  }
+  for (let y = 0; y < alto; y++) {
+    for (let x = 0; x < ancho; x++) {
+      let suma = 0;
+      let n = 0;
+      for (let k = -radio; k <= radio; k++) {
+        const yy = y + k;
+        if (yy < 0 || yy >= alto) continue;
+        suma += tmp[yy * ancho + x];
+        n++;
+      }
+      const suave = suma / n;
+      const i = (y * ancho + x) * 4;
+      pix[i + 3] = suave;
+      if (suave < 255 && suave > 0) {
+        const mezcla = suave / 255;
+        pix[i] = Math.round(pix[i] * mezcla + 8 * (1 - mezcla));
+        pix[i + 1] = Math.round(pix[i + 1] * mezcla + 12 * (1 - mezcla));
+        pix[i + 2] = Math.round(pix[i + 2] * mezcla + 32 * (1 - mezcla));
+      }
+    }
+  }
+  g.putImageData(datos, 0, 0);
+  return lienzo;
+}
+
+function dibujarEscudo(ctx: CanvasRenderingContext2D, img: HTMLImageElement, x: number, y: number, alto: number) {
+  const recorte = escudoFundido(img, alto);
   ctx.save();
   ctx.shadowColor = "rgba(0,0,0,0.4)";
-  ctx.shadowBlur = 16;
-  ctx.fillStyle = "#ffffff";
-  ctx.beginPath();
-  ctx.arc(cx, cy, radio, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.shadowBlur = 22;
+  ctx.shadowOffsetY = 6;
+  ctx.drawImage(recorte, x, y);
   ctx.restore();
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(cx, cy, radio - 5, 0, Math.PI * 2);
-  ctx.clip();
-  const caja = (radio - 8) * 1.62;
-  const escala = Math.min(caja / img.width, caja / img.height);
-  ctx.drawImage(img, cx - (img.width * escala) / 2, cy - (img.height * escala) / 2, img.width * escala, img.height * escala);
-  ctx.restore();
-  ctx.strokeStyle = "#f0c14d";
-  ctx.lineWidth = 5;
-  ctx.beginPath();
-  ctx.arc(cx, cy, radio, 0, Math.PI * 2);
-  ctx.stroke();
 }
 
 function textoConSombra(ctx: CanvasRenderingContext2D, dibujar: () => void) {
@@ -289,11 +383,13 @@ async function pintarCarnet(canvas: HTMLCanvasElement, datos: DatosCarnet) {
     ctx.fillText(`TEMPORADA ${temporadaActual()}`, margen, yNumero + 112);
   });
 
-  dibujarEscudo(ctx, escudo, ANCHO - 188, 150, 96);
+  const altoEscudo = 390;
+  const anchoEscudo = altoEscudo * (escudo.width / escudo.height);
+  dibujarEscudo(ctx, escudo, ANCHO - 108 - anchoEscudo, 78, altoEscudo);
 
-  const caja = 292;
-  const cajaX = ANCHO - margen - caja;
-  const cajaY = 300;
+  const caja = 248;
+  const cajaX = ANCHO - 72 - caja;
+  const cajaY = ALTO - 72 - caja;
   ctx.save();
   ctx.shadowColor = "rgba(0,0,0,0.45)";
   ctx.shadowBlur = 28;
@@ -310,9 +406,9 @@ async function pintarCarnet(canvas: HTMLCanvasElement, datos: DatosCarnet) {
 
   textoConSombra(ctx, () => {
     ctx.fillStyle = "#ffffff";
-    ctx.font = "500 24px Oswald, sans-serif";
+    ctx.font = "500 22px Oswald, sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("IDENTIFICACIÓN", cajaX + caja / 2, cajaY + caja + 48);
+    ctx.fillText("IDENTIFICACIÓN", cajaX + caja / 2, cajaY - 18);
   });
 
   ctx.restore();
