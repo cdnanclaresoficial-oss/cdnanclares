@@ -74,26 +74,25 @@ function lineasDe(ctx: CanvasRenderingContext2D, texto: string, max: number) {
   return lineas.slice(0, 3);
 }
 
-function dibujarFotoFundida(ctx: CanvasRenderingContext2D, img: HTMLImageElement, cx: number, cy: number, radio: number) {
-  const lienzo = document.createElement("canvas");
-  const lado = Math.round(radio * 2);
-  lienzo.width = lado;
-  lienzo.height = lado;
-  const g = lienzo.getContext("2d");
-  if (!g) return;
+function dibujarFotoCuadrada(ctx: CanvasRenderingContext2D, img: HTMLImageElement, x: number, y: number, lado: number) {
+  ctx.save();
+  ctx.shadowColor = "rgba(0,0,0,0.45)";
+  ctx.shadowBlur = 18;
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(x - 8, y - 8, lado + 16, lado + 16);
+  ctx.restore();
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x, y, lado, lado);
+  ctx.clip();
   const cover = Math.max(lado / img.width, lado / img.height);
   const w = img.width * cover;
   const h = img.height * cover;
-  g.drawImage(img, (lado - w) / 2, (lado - h) / 2, w, h);
-  g.globalCompositeOperation = "destination-in";
-  const mascara = g.createRadialGradient(radio, radio, radio * 0.42, radio, radio, radio);
-  mascara.addColorStop(0, "rgba(0,0,0,1)");
-  mascara.addColorStop(0.58, "rgba(0,0,0,0.92)");
-  mascara.addColorStop(0.82, "rgba(0,0,0,0.35)");
-  mascara.addColorStop(1, "rgba(0,0,0,0)");
-  g.fillStyle = mascara;
-  g.fillRect(0, 0, lado, lado);
-  ctx.drawImage(lienzo, cx - radio, cy - radio);
+  ctx.drawImage(img, x + (lado - w) / 2, y + (lado - h) / 2, w, h);
+  ctx.restore();
+  ctx.strokeStyle = "#f0c14d";
+  ctx.lineWidth = 5;
+  ctx.strokeRect(x, y, lado, lado);
 }
 
 function dibujarEscudo(ctx: CanvasRenderingContext2D, img: HTMLImageElement, cx: number, cy: number, radio: number) {
@@ -209,10 +208,11 @@ async function pintarCarnet(canvas: HTMLCanvasElement, datos: DatosCarnet) {
     ctx.fillText("CARNET DE SOCIO", margen, 128);
   });
 
-  const fotoRadio = 118;
-  const fotoY = 268;
+  const fotoLado = 320;
+  const fotoX = margen;
+  const fotoY = 156;
   if (foto) {
-    dibujarFotoFundida(ctx, foto, margen + fotoRadio, fotoY, fotoRadio);
+    dibujarFotoCuadrada(ctx, foto, fotoX, fotoY, fotoLado);
   }
 
   const nombre = `${datos.nombre} ${datos.apellidos}`.replace(/\s+/g, " ").trim().toUpperCase();
@@ -226,7 +226,7 @@ async function pintarCarnet(canvas: HTMLCanvasElement, datos: DatosCarnet) {
   }
   const lineas = lineasDe(ctx, nombre, maxNombre);
   const altoLinea = tamanoNombre + 16;
-  const yNombre = foto ? fotoY + fotoRadio + 86 : 280;
+  const yNombre = foto ? fotoY + fotoLado + 78 : 280;
   textoConSombra(ctx, () => {
     ctx.fillStyle = "#fff8ea";
     ctx.font = `700 ${tamanoNombre}px "Cinzel Decorative", serif`;
@@ -249,9 +249,7 @@ async function pintarCarnet(canvas: HTMLCanvasElement, datos: DatosCarnet) {
 
   let yBloque = yLinea + 42;
   if (datos.cuota) {
-    const tipo = datos.cuota.split("·")[0].trim().toUpperCase();
-    const precio = datos.cuota.includes("·") ? datos.cuota.split("·")[1].trim() : "";
-    const etiqueta = precio ? `${tipo}  ·  ${precio}` : tipo;
+    const etiqueta = datos.cuota.split("·")[0].trim().toUpperCase();
     ctx.font = "700 40px Oswald, sans-serif";
     const anchoEtiqueta = ctx.measureText(etiqueta).width;
     const cajaX = margen - 16;

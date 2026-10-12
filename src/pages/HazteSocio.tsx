@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -93,6 +93,7 @@ const HazteSocio = () => {
   const [foto, setFoto] = useState<string | null>(null);
   const [cuotaId, setCuotaId] = useState("");
   const [carnet, setCarnet] = useState<CarnetListo | null>(null);
+  const cuotaRef = useRef<HTMLDivElement>(null);
 
   const calculateAge = (birthDate: string): number => {
     const today = new Date();
@@ -115,24 +116,39 @@ const HazteSocio = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const validation = socioSchema.safeParse(form);
-    if (!validation.success) {
+    const cuota = cuotaPorId(cuotaId);
+    const validation = socioSchema.safeParse({
+      ...form,
+      dni: form.dni.trim().toUpperCase(),
+    });
+    if (!validation.success || !cuota) {
       const nextErrors: Record<string, string> = {};
-      validation.error.issues.forEach((issue) => {
+      validation.error?.issues.forEach((issue) => {
         const key = issue.path[0] as string;
         if (!nextErrors[key]) nextErrors[key] = issue.message;
       });
+      if (!cuota) {
+        nextErrors.cuota = "Es obligatorio elegir el tipo de cuota: individual, familiar o familia numerosa.";
+      }
       setErrors(nextErrors);
+      toast({
+        title: !cuota ? "Elige el tipo de cuota" : "Faltan datos del alta",
+        description: !cuota
+          ? "Es obligatorio: individual, familiar o familia numerosa."
+          : "Revisa los campos marcados en rojo.",
+        variant: "destructive",
+      });
+      if (!cuota) cuotaRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
     const age = calculateAge(form.fecha_nacimiento);
     if (age < 18 && !form.telefono_tutor.trim()) {
       setErrors((prev) => ({ ...prev, telefono_tutor: "Obligatorio para menores de edad" }));
-      return;
-    }
-    const cuota = cuotaPorId(cuotaId);
-    if (!cuota) {
-      setErrors((prev) => ({ ...prev, cuota: "Elige el tipo de cuota" }));
+      toast({
+        title: "Falta el teléfono del tutor",
+        description: "Es obligatorio si el socio es menor de edad.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -259,10 +275,10 @@ const HazteSocio = () => {
 
       <div className="container mx-auto px-4 py-10 max-w-3xl">
         <form onSubmit={handleSubmit} className="bg-card border border-border rounded-xl p-8 shadow-sm">
-          <div>
-            <p className="font-heading text-sm uppercase tracking-wider text-primary">Cuota anual</p>
-            <p className="mt-1 text-sm text-muted-foreground">El pago se hace por transferencia. Al terminar verás tu carnet para descargarlo.</p>
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <div ref={cuotaRef}>
+            <p className="font-heading text-sm uppercase tracking-wider text-primary">Cuota anual · obligatorio</p>
+            <p className="mt-1 text-sm text-muted-foreground">Elige individual, familiar o familia numerosa. Sin este dato el alta no se envía.</p>
+            <div className={`mt-4 grid gap-3 sm:grid-cols-3 ${errors.cuota ? "rounded-xl ring-2 ring-destructive ring-offset-2" : ""}`}>
               {CUOTAS_SOCIO.map((cuota) => (
                 <button
                   key={cuota.id}
@@ -285,7 +301,7 @@ const HazteSocio = () => {
                 </button>
               ))}
             </div>
-            {errors.cuota && <p className="text-xs text-destructive mt-2">{errors.cuota}</p>}
+            {errors.cuota && <p className="mt-3 text-sm font-semibold text-destructive">{errors.cuota}</p>}
           </div>
 
           <div className="mt-6 rounded-xl border border-[#f3c1c1] bg-[#fff4f4] p-5">
@@ -328,9 +344,9 @@ const HazteSocio = () => {
             <p className="mt-1 text-xs text-muted-foreground">Si no eliges foto, el carnet llevará la oca del club.</p>
             <div className="mt-3 flex items-center gap-4">
               {foto ? (
-                <img src={foto} alt="Foto para el carnet" className="h-20 w-20 rounded-full object-cover border-2 border-primary" />
+                <img src={foto} alt="Foto para el carnet" className="h-24 w-24 object-cover border-2 border-primary" />
               ) : (
-                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary text-[10px] font-heading uppercase tracking-wider text-primary-foreground">
+                <div className="flex h-24 w-24 items-center justify-center bg-primary text-[10px] font-heading uppercase tracking-wider text-primary-foreground">
                   Oca
                 </div>
               )}
