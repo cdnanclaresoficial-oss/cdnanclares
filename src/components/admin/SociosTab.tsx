@@ -82,7 +82,7 @@ const CAMPOS = [
 const SociosTab = ({ socios, onRefresh }: SociosTabProps) => {
   const { toast } = useToast();
   const [search, setSearch] = useState("");
-  const [abierto, setAbierto] = useState(false);
+  const [abierto, setAbierto] = useState(true);
   const [form, setForm] = useState(INITIAL);
   const [numero, setNumero] = useState("");
   const [cuotaId, setCuotaId] = useState("");
@@ -194,7 +194,6 @@ const SociosTab = ({ socios, onRefresh }: SociosTabProps) => {
       setNumero("");
       setCuotaId("");
       setErrors({});
-      setAbierto(false);
       onRefresh();
     } catch (err: any) {
       toast({ title: "No se pudo guardar el socio", description: err.message, variant: "destructive" });
@@ -217,9 +216,9 @@ const SociosTab = ({ socios, onRefresh }: SociosTabProps) => {
 
       {abierto && (
         <form onSubmit={guardar} className="mb-6 rounded-xl border border-border bg-card p-6">
-          <h2 className="font-heading text-xl uppercase tracking-wide text-primary">Números reservados</h2>
+          <h2 className="font-heading text-xl uppercase tracking-wide text-primary">Meter socios del 1 al 25</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Del 1 al 25 se dan de alta aquí. Quedan {libres.length} números libres.
+            Elige el número, la cuota (individual, familiar o familia numerosa) y guarda. Quedan {libres.length} números libres.
           </p>
           {libres.length === 0 ? (
             <p className="mt-4 text-sm font-semibold text-secondary">Los 25 números reservados ya están asignados.</p>

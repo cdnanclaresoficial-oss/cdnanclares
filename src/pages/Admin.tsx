@@ -80,7 +80,7 @@ const Admin = () => {
       </section>
 
       <div className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="jugadores">
+        <Tabs defaultValue="socios">
           <TabsList className="mb-6">
             <TabsTrigger value="jugadores" className="font-heading uppercase tracking-wider">
               Gestión de Jugadores ({jugadores.length})
