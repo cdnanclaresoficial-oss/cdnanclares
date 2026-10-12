@@ -254,6 +254,7 @@ async function pintarCarnet(canvas: HTMLCanvasElement, datos: DatosCarnet) {
 
   await document.fonts.load("700 108px Oswald");
   await document.fonts.load("700 64px Cinzel Decorative");
+  await document.fonts.load("700 26px Cinzel Decorative");
   await document.fonts.load("500 28px Oswald");
 
   const codigo = codigoQrSocio(datos);
@@ -316,17 +317,19 @@ async function pintarCarnet(canvas: HTMLCanvasElement, datos: DatosCarnet) {
   redondear(ctx, 36, 36, ANCHO - 72, ALTO - 72, 26);
   ctx.stroke();
 
-  const margen = 96;
+  const fotoLado = 250;
+  const fotoX = 156;
+  const fotoY = 168;
+  const centroFoto = fotoX + fotoLado / 2;
   textoConSombra(ctx, () => {
     ctx.fillStyle = "#f0c14d";
-    ctx.font = "500 28px Oswald, sans-serif";
-    ctx.textAlign = "left";
-    ctx.fillText("CARNET DE SOCIO", margen, 128);
+    ctx.font = "700 26px \"Cinzel Decorative\", serif";
+    ctx.textAlign = "center";
+    ctx.letterSpacing = "2px";
+    ctx.fillText("CARNET DE SOCIO", centroFoto, 118);
+    ctx.letterSpacing = "0px";
   });
 
-  const fotoLado = 250;
-  const fotoX = margen;
-  const fotoY = 148;
   if (foto) {
     dibujarFotoDifuminada(ctx, foto, fotoX, fotoY, fotoLado);
   }
@@ -342,14 +345,14 @@ async function pintarCarnet(canvas: HTMLCanvasElement, datos: DatosCarnet) {
   }
   const lineas = lineasDe(ctx, nombre, maxNombre);
   const altoLinea = tamanoNombre + 16;
-  const yNombre = foto ? fotoY + fotoLado + 72 : 280;
+  const yNombre = foto ? fotoY + fotoLado + 118 : 300;
   textoConSombra(ctx, () => {
     ctx.fillStyle = "#fff8ea";
     ctx.font = `700 ${tamanoNombre}px "Cinzel Decorative", serif`;
     ctx.letterSpacing = "3px";
     ctx.textAlign = "left";
     lineas.forEach((linea, i) => {
-      ctx.fillText(linea, margen, yNombre + i * altoLinea);
+      ctx.fillText(linea, fotoX, yNombre + i * altoLinea);
     });
     ctx.letterSpacing = "0px";
   });
@@ -359,16 +362,16 @@ async function pintarCarnet(canvas: HTMLCanvasElement, datos: DatosCarnet) {
   ctx.strokeStyle = "#f0c14d";
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(margen, yLinea);
-  ctx.lineTo(margen + 240, yLinea);
+  ctx.moveTo(fotoX, yLinea);
+  ctx.lineTo(fotoX + 240, yLinea);
   ctx.stroke();
 
-  let yBloque = yLinea + 42;
+  let yBloque = yLinea + 18;
   if (datos.cuota) {
     const etiqueta = datos.cuota.split("·")[0].trim().toUpperCase();
     ctx.font = "700 40px Oswald, sans-serif";
     const anchoEtiqueta = ctx.measureText(etiqueta).width;
-    const cajaX = margen - 16;
+    const cajaX = fotoX - 16;
     const cajaY = yBloque - 28;
     const cajaAncho = Math.min(anchoEtiqueta + 36, 620);
     const cajaAlto = 92;
@@ -383,10 +386,10 @@ async function pintarCarnet(canvas: HTMLCanvasElement, datos: DatosCarnet) {
       ctx.fillStyle = "#f0c14d";
       ctx.font = "500 18px Oswald, sans-serif";
       ctx.textAlign = "left";
-      ctx.fillText("TIPO DE CUOTA", margen, yBloque);
+      ctx.fillText("TIPO DE CUOTA", fotoX, yBloque);
       ctx.fillStyle = "#fff8ea";
       ctx.font = "700 40px Oswald, sans-serif";
-      ctx.fillText(etiqueta, margen, yBloque + 44);
+      ctx.fillText(etiqueta, fotoX, yBloque + 44);
     });
     yBloque += 118;
   }
@@ -396,13 +399,13 @@ async function pintarCarnet(canvas: HTMLCanvasElement, datos: DatosCarnet) {
     ctx.fillStyle = "#f0c14d";
     ctx.font = "500 22px Oswald, sans-serif";
     ctx.textAlign = "left";
-    ctx.fillText("NÚMERO DE SOCIO", margen, yNumero);
+    ctx.fillText("NÚMERO DE SOCIO", fotoX, yNumero);
     ctx.fillStyle = "#ffe08a";
     ctx.font = "700 72px Oswald, sans-serif";
-    ctx.fillText(formatoNumeroSocio(datos.numero), margen, yNumero + 74);
+    ctx.fillText(formatoNumeroSocio(datos.numero), fotoX, yNumero + 74);
     ctx.fillStyle = "rgba(255,255,255,0.92)";
     ctx.font = "500 24px Oswald, sans-serif";
-    ctx.fillText(`TEMPORADA ${temporadaActual()}`, margen, yNumero + 112);
+    ctx.fillText(`TEMPORADA ${temporadaActual()}`, fotoX, yNumero + 112);
   });
 
   const caja = 248;
