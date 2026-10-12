@@ -370,13 +370,15 @@ async function pintarCarnet(canvas: HTMLCanvasElement, datos: DatosCarnet) {
 
   let yBloque = yLinea + 18;
   if (datos.cuota) {
-    const etiqueta = datos.cuota.split("·")[0].trim().toUpperCase();
+    const trozos = datos.cuota.split("·").map((t) => t.trim()).filter((t) => t && !/€/.test(t));
+    const etiqueta = (trozos[0] || "").toUpperCase();
+    const detalle = (trozos[1] || "").toUpperCase();
     ctx.font = "700 40px Oswald, sans-serif";
-    const anchoEtiqueta = ctx.measureText(etiqueta).width;
+    const anchoEtiqueta = Math.max(ctx.measureText(etiqueta).width, detalle ? ctx.measureText(detalle).width : 0);
     const cajaX = fotoX - 16;
     const cajaY = yBloque - 28;
     const cajaAncho = Math.min(anchoEtiqueta + 36, 620);
-    const cajaAlto = 92;
+    const cajaAlto = detalle ? 124 : 92;
     ctx.fillStyle = "rgba(5,8,28,0.72)";
     redondear(ctx, cajaX, cajaY, cajaAncho, cajaAlto, 14);
     ctx.fill();
@@ -392,8 +394,12 @@ async function pintarCarnet(canvas: HTMLCanvasElement, datos: DatosCarnet) {
       ctx.fillStyle = "#fff8ea";
       ctx.font = "700 40px Oswald, sans-serif";
       ctx.fillText(etiqueta, fotoX, yBloque + 44);
+      if (detalle) {
+        ctx.font = "600 26px Oswald, sans-serif";
+        ctx.fillText(detalle, fotoX, yBloque + 78);
+      }
     });
-    yBloque += 96;
+    yBloque += detalle ? 128 : 96;
   }
 
   const yNumero = yBloque;

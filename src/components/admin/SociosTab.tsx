@@ -248,7 +248,7 @@ const SociosTab = ({ socios, onRefresh }: SociosTabProps) => {
                   >
                     <option value="">Elegir</option>
                     {CUOTAS_SOCIO.map((cuota) => (
-                      <option key={cuota.id} value={cuota.id}>{cuota.nombre} · {cuota.precio} €</option>
+                      <option key={cuota.id} value={cuota.id}>{cuota.nombre}{cuota.personas ? ` · ${cuota.personas}` : ""} · {cuota.precio} €</option>
                     ))}
                   </select>
                   {errors.cuota && <p className="mt-1 text-xs text-destructive">{errors.cuota}</p>}

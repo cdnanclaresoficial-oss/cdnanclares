@@ -297,6 +297,7 @@ const HazteSocio = () => {
                   }`}
                 >
                   <span className="block font-heading text-xs uppercase tracking-wider">{cuota.nombre}</span>
+                  {cuota.personas && <span className="mt-1 block text-sm font-semibold">{cuota.personas}</span>}
                   <span className="mt-1 block font-heading text-3xl font-bold">{cuota.precio} €</span>
                 </button>
               ))}

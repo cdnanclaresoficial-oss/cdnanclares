@@ -1,7 +1,7 @@
 export const CUOTAS_SOCIO = [
-  { id: "individual", nombre: "Individual", precio: 20 },
-  { id: "familiar", nombre: "Familiar", precio: 35 },
-  { id: "numerosa", nombre: "Familia numerosa", precio: 50 },
+  { id: "individual", nombre: "Individual", personas: "", precio: 20 },
+  { id: "familiar", nombre: "Familiar", personas: "2 personas", precio: 35 },
+  { id: "numerosa", nombre: "Familia numerosa", personas: "A partir de 3", precio: 50 },
 ] as const;
 
 export type CuotaSocioId = (typeof CUOTAS_SOCIO)[number]["id"];
@@ -19,5 +19,6 @@ export function cuotaPorId(id: string) {
 export function textoCuota(id: string) {
   const cuota = cuotaPorId(id);
   if (!cuota) return "";
-  return `${cuota.nombre} · ${cuota.precio} €`;
+  const personas = cuota.personas ? ` · ${cuota.personas}` : "";
+  return `${cuota.nombre}${personas} · ${cuota.precio} €`;
 }
