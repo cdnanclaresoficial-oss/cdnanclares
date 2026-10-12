@@ -81,6 +81,11 @@ export const sociosService = {
     if (error) throw error;
     return data;
   },
+  async createConNumero(socio: Omit<import("@/types").Socio, "id" | "created_at">) {
+    const { data, error } = await supabase.from("socios").insert(socio).select().single();
+    if (error) throw error;
+    return data;
+  },
 };
 
 // --- Auth ---

@@ -109,7 +109,7 @@ const Admin = () => {
           </TabsContent>
 
           <TabsContent value="socios">
-            <SociosTab socios={socios} />
+            <SociosTab socios={socios} onRefresh={fetchData} />
           </TabsContent>
         </Tabs>
       </div>

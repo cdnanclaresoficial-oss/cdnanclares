@@ -119,6 +119,48 @@ export async function notifyNewOrder(pedido: {
   });
 }
 
+export async function notifyNewSocio(socio: {
+  numero: string;
+  nombre: string;
+  apellidos: string;
+  dni: string;
+  fechaNacimiento: string;
+  direccion: string;
+  email: string;
+  telefono: string;
+  telefonoTutor?: string;
+  cuota: string;
+  origen: string;
+}) {
+  const nombre = `${socio.nombre} ${socio.apellidos}`.trim();
+  const aviso = [
+    "C.D. Nanclares de la Oca",
+    "",
+    `Nuevo socio · nº ${socio.numero}`,
+    `Origen: ${socio.origen}`,
+    "",
+    `Nombre: ${nombre}`,
+    `DNI: ${socio.dni}`,
+    `Nacimiento: ${socio.fechaNacimiento}`,
+    `Dirección: ${socio.direccion}`,
+    `Correo: ${socio.email}`,
+    `Teléfono: ${socio.telefono}`,
+    ...(socio.telefonoTutor ? [`Teléfono del tutor: ${socio.telefonoTutor}`] : []),
+    "",
+    `Cuota: ${socio.cuota}`,
+    "Pago: transferencia bancaria",
+    "Cuenta: ES87 3035 0435 1043 5000 1559",
+  ].join("\n");
+
+  await enviarFormulario({
+    _subject: `Nuevo socio · nº ${socio.numero} · ${nombre}`,
+    _template: "box",
+    _captcha: "false",
+    _replyto: socio.email,
+    "Alta de socio": aviso,
+  });
+}
+
 async function enviarFormulario(campos: Record<string, string>) {
   const res = await fetch(`https://formsubmit.co/ajax/${CLUB_EMAIL}`, {
     method: "POST",
@@ -131,6 +173,6 @@ async function enviarFormulario(campos: Record<string, string>) {
 
   const data = await res.json().catch(() => ({} as { success?: string | boolean; message?: string }));
   if (!res.ok || (data.success !== true && data.success !== "true")) {
-    throw new Error(data.message || "No se ha podido enviar el aviso del pedido por email.");
+    throw new Error(data.message || "No se ha podido enviar el aviso por email.");
   }
 }

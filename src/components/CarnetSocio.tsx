@@ -12,6 +12,7 @@ export type DatosCarnet = {
   apellidos: string;
   numero: string;
   foto: string | null;
+  cuota?: string;
 };
 
 type CarnetSocioProps = DatosCarnet & {
@@ -220,6 +221,11 @@ async function pintarCarnet(canvas: HTMLCanvasElement, datos: DatosCarnet) {
     ctx.fillStyle = "rgba(255,255,255,0.92)";
     ctx.font = "500 28px Oswald, sans-serif";
     ctx.fillText(`TEMPORADA ${temporadaActual()}`, margen, yNumero + 164);
+    if (datos.cuota) {
+      ctx.fillStyle = "#f0c14d";
+      ctx.font = "500 26px Oswald, sans-serif";
+      ctx.fillText(datos.cuota.toUpperCase(), margen, yNumero + 206);
+    }
   });
 
   const caja = 360;
@@ -249,7 +255,7 @@ async function pintarCarnet(canvas: HTMLCanvasElement, datos: DatosCarnet) {
   ctx.restore();
 }
 
-const CarnetSocio = ({ nombre, apellidos, numero, foto, onClose }: CarnetSocioProps) => {
+const CarnetSocio = ({ nombre, apellidos, numero, foto, cuota, onClose }: CarnetSocioProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [listo, setListo] = useState(false);
 
@@ -266,7 +272,7 @@ const CarnetSocio = ({ nombre, apellidos, numero, foto, onClose }: CarnetSocioPr
     if (!canvas) return;
     let cancelado = false;
     setListo(false);
-    pintarCarnet(canvas, { nombre, apellidos, numero, foto })
+    pintarCarnet(canvas, { nombre, apellidos, numero, foto, cuota })
       .then(() => {
         if (!cancelado) setListo(true);
       })
@@ -276,7 +282,7 @@ const CarnetSocio = ({ nombre, apellidos, numero, foto, onClose }: CarnetSocioPr
     return () => {
       cancelado = true;
     };
-  }, [nombre, apellidos, numero, foto]);
+  }, [nombre, apellidos, numero, foto, cuota]);
 
   const descargar = () => {
     const canvas = canvasRef.current;

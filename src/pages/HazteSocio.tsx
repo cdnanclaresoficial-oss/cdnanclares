@@ -6,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import { sociosService } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import CarnetSocio from "@/components/CarnetSocio";
+import { notifyNewSocio } from "@/services/notifications";
+import { CUOTAS_SOCIO, EMAIL_CONTACTO_CLUB, IBAN_CLUB, WHATSAPP_CLUB, WHATSAPP_CLUB_URL, cuotaPorId, textoCuota } from "@/data/cuotasSocio";
 
 const socioSchema = z.object({
   nombre: z.string().trim().min(1, "Requerido"),
@@ -80,6 +82,7 @@ type CarnetListo = {
   apellidos: string;
   numero: string;
   foto: string | null;
+  cuota: string;
 };
 
 const HazteSocio = () => {
@@ -88,6 +91,7 @@ const HazteSocio = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [foto, setFoto] = useState<string | null>(null);
+  const [cuotaId, setCuotaId] = useState("");
   const [carnet, setCarnet] = useState<CarnetListo | null>(null);
 
   const calculateAge = (birthDate: string): number => {
@@ -126,6 +130,11 @@ const HazteSocio = () => {
       setErrors((prev) => ({ ...prev, telefono_tutor: "Obligatorio para menores de edad" }));
       return;
     }
+    const cuota = cuotaPorId(cuotaId);
+    if (!cuota) {
+      setErrors((prev) => ({ ...prev, cuota: "Elige el tipo de cuota" }));
+      return;
+    }
 
     setLoading(true);
     try {
@@ -151,14 +160,46 @@ const HazteSocio = () => {
         telefono_tutor: form.telefono_tutor.trim() || undefined,
       });
 
+      const numero = numeroDesdeAlta(numeroSocio);
+      const direccion = [
+        form.direccion_calle.trim(),
+        form.direccion_numero.trim(),
+        form.direccion_piso.trim() && `piso ${form.direccion_piso.trim()}`,
+        form.direccion_puerta.trim() && `puerta ${form.direccion_puerta.trim()}`,
+        `${form.direccion_codigo_postal.trim()} ${form.direccion_ciudad.trim()}`,
+        form.direccion_provincia.trim(),
+      ].filter(Boolean).join(", ");
+      try {
+        await notifyNewSocio({
+          numero,
+          nombre,
+          apellidos,
+          dni: form.dni.trim().toUpperCase(),
+          fechaNacimiento: form.fecha_nacimiento,
+          direccion,
+          email: form.email.trim().toLowerCase(),
+          telefono: form.telefono.trim(),
+          telefonoTutor: form.telefono_tutor.trim() || undefined,
+          cuota: textoCuota(cuota.id),
+          origen: "Alta en la web",
+        });
+      } catch (mailError: any) {
+        toast({
+          title: "Socio registrado, email pendiente",
+          description: mailError.message || "El alta está hecha, pero el aviso no ha salido por email.",
+          variant: "destructive",
+        });
+      }
       setCarnet({
         nombre,
         apellidos,
-        numero: numeroDesdeAlta(numeroSocio),
+        numero,
         foto: fotoCarnet,
+        cuota: textoCuota(cuota.id),
       });
       setForm(INITIAL_FORM);
       setFoto(null);
+      setCuotaId("");
       setErrors({});
     } catch (err: any) {
       toast({
@@ -211,14 +252,62 @@ const HazteSocio = () => {
             Hazte Socio
           </h1>
           <p className="text-primary-foreground/60 mt-2">
-            Únete al C.D. Nanclares y forma parte del club.
+            Elige tu cuota, haz la transferencia y descarga tu carnet.
           </p>
         </div>
       </section>
 
       <div className="container mx-auto px-4 py-10 max-w-3xl">
         <form onSubmit={handleSubmit} className="bg-card border border-border rounded-xl p-8 shadow-sm">
-          <div className="grid sm:grid-cols-2 gap-4">
+          <div>
+            <p className="font-heading text-sm uppercase tracking-wider text-primary">Cuota anual</p>
+            <p className="mt-1 text-sm text-muted-foreground">El pago se hace por transferencia. Al terminar verás tu carnet para descargarlo.</p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              {CUOTAS_SOCIO.map((cuota) => (
+                <button
+                  key={cuota.id}
+                  type="button"
+                  onClick={() => {
+                    setCuotaId(cuota.id);
+                    setErrors((prev) => {
+                      if (!prev.cuota) return prev;
+                      const next = { ...prev };
+                      delete next.cuota;
+                      return next;
+                    });
+                  }}
+                  className={`rounded-xl border px-4 py-4 text-left transition-colors ${
+                    cuotaId === cuota.id ? "border-secondary bg-secondary text-secondary-foreground" : "border-border hover:border-primary"
+                  }`}
+                >
+                  <span className="block font-heading text-xs uppercase tracking-wider">{cuota.nombre}</span>
+                  <span className="mt-1 block font-heading text-3xl font-bold">{cuota.precio} €</span>
+                </button>
+              ))}
+            </div>
+            {errors.cuota && <p className="text-xs text-destructive mt-2">{errors.cuota}</p>}
+          </div>
+
+          <div className="mt-6 rounded-xl border border-[#f3c1c1] bg-[#fff4f4] p-5">
+            <p className="font-heading text-sm uppercase tracking-wider text-[#9b1b1b]">Transferencia</p>
+            <p className="mt-2 text-sm text-[#9b1b1b]">Indica en el concepto tu nombre y «cuota socio».</p>
+            <p className="mt-3 font-heading text-xl font-bold tracking-wide text-[#1a2744]">{IBAN_CLUB}</p>
+            <button
+              type="button"
+              onClick={() => navigator.clipboard.writeText(IBAN_CLUB.replace(/\s/g, ""))}
+              className="mt-2 text-xs font-semibold uppercase tracking-wider text-[#9b1b1b]"
+            >
+              Copiar cuenta
+            </button>
+            <p className="mt-4 text-sm text-[#1a2744]">
+              Si tienes dudas, llama o escribe por WhatsApp al{" "}
+              <a href={WHATSAPP_CLUB_URL} className="font-semibold underline">{WHATSAPP_CLUB}</a>
+              {" "}o al correo{" "}
+              <a href={`mailto:${EMAIL_CONTACTO_CLUB}`} className="font-semibold underline">{EMAIL_CONTACTO_CLUB}</a>.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-4 mt-6">
             {fields.map((field) => (
               <div key={field.key} className={field.key === "direccion_calle" ? "sm:col-span-2" : ""}>
                 <Label className="text-sm font-semibold text-primary">{field.label}</Label>
@@ -282,6 +371,7 @@ const HazteSocio = () => {
           apellidos={carnet.apellidos}
           numero={carnet.numero}
           foto={carnet.foto}
+          cuota={carnet.cuota}
           onClose={() => setCarnet(null)}
         />
       )}
