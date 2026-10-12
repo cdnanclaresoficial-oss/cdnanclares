@@ -82,47 +82,41 @@ export async function notifyNewOrder(pedido: {
   const socio = cliente.es_socio
     ? `Sí${cliente.numero_socio ? `, número ${cliente.numero_socio}` : ""}`
     : "No";
-  const lineasTicket = articulos
-    .map((a) => `${a.nombre} — talla ${a.talla} — ${unidades(a.cantidad)} — ${euros(a.precio * a.cantidad)}`)
-    .join("\n");
+  const nota = cliente.observaciones?.trim();
+  const articulosTexto = articulos
+    .map((a, indice) =>
+      [
+        `${indice + 1}. ${a.nombre}`,
+        `Talla: ${a.talla}`,
+        `${unidades(a.cantidad)} × ${euros(a.precio)} = ${euros(a.precio * a.cantidad)}`,
+      ].join("\n"),
+    )
+    .join("\n\n");
+  const ticket = [
+    "C.D. Nanclares de la Oca",
+    "",
+    `Cliente: ${nombre}`,
+    `Correo: ${cliente.email}`,
+    `Teléfono: ${cliente.telefono}`,
+    `DNI: ${cliente.dni}`,
+    `Socio: ${socio}`,
+    "",
+    "Artículos",
+    articulosTexto,
+    "",
+    `Total: ${euros(total)}`,
+    ...(nota ? ["", `Nota: ${nota}`] : []),
+    "",
+    "El pago se realizará en las instalaciones del club a la hora de recoger la ropa.",
+  ].join("\n");
 
-  const ticket: Record<string, string> = {
+  await enviarFormulario({
     _subject: `Ticket de compra · ${nombre} · ${euros(total)}`,
     _template: "box",
     _captcha: "false",
     _replyto: cliente.email,
-    email: cliente.email,
-    _autoresponse: [
-      `Hola ${cliente.nombre},`,
-      "",
-      "El C.D. Nanclares ya tiene tu pedido de equipación.",
-      "",
-      lineasTicket,
-      "",
-      `Total: ${euros(total)}`,
-      "",
-      "Te avisaremos cuando puedas pasar a recogerlo. El pago se hace en el club.",
-      "",
-      "Gracias.",
-    ].join("\n"),
-    Ticket: "Equipación oficial del C.D. Nanclares de la Oca",
-    Cliente: nombre,
-    Correo: cliente.email,
-    Teléfono: cliente.telefono,
-    DNI: cliente.dni,
-    Socio: socio,
-  };
-
-  articulos.forEach((a, indice) => {
-    ticket[`${indice + 1}. ${a.nombre}`] = `Talla ${a.talla} · ${unidades(a.cantidad)} · ${euros(a.precio * a.cantidad)}`;
+    "Ticket de compra": ticket,
   });
-
-  ticket.Total = euros(total);
-  ticket.Pago = "Se abona al recoger la equipación en el club.";
-  const nota = cliente.observaciones?.trim();
-  if (nota) ticket.Nota = nota;
-
-  await enviarFormulario(ticket);
 }
 
 async function enviarFormulario(campos: Record<string, string>) {
