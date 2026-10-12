@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { sociosService } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import CarnetSocio from "@/components/CarnetSocio";
 
 const socioSchema = z.object({
   nombre: z.string().trim().min(1, "Requerido"),
@@ -44,11 +45,50 @@ const INITIAL_FORM = {
   telefono_tutor: "",
 };
 
+function numeroDesdeAlta(data: unknown) {
+  if (typeof data === "number" || typeof data === "string") return String(data);
+  if (data && typeof data === "object" && "numero_socio" in data) {
+    return String((data as { numero_socio: unknown }).numero_socio);
+  }
+  return "";
+}
+
+function leerFoto(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("No se pudo leer la foto"));
+    reader.onload = () => {
+      const imagen = new Image();
+      imagen.onerror = () => reject(new Error("La foto no es válida"));
+      imagen.onload = () => {
+        const maximo = 900;
+        const escala = Math.min(1, maximo / Math.max(imagen.width, imagen.height));
+        const lienzo = document.createElement("canvas");
+        lienzo.width = Math.max(1, Math.round(imagen.width * escala));
+        lienzo.height = Math.max(1, Math.round(imagen.height * escala));
+        lienzo.getContext("2d")?.drawImage(imagen, 0, 0, lienzo.width, lienzo.height);
+        resolve(lienzo.toDataURL("image/jpeg", 0.9));
+      };
+      imagen.src = String(reader.result);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+type CarnetListo = {
+  nombre: string;
+  apellidos: string;
+  numero: string;
+  foto: string | null;
+};
+
 const HazteSocio = () => {
   const { toast } = useToast();
   const [form, setForm] = useState(INITIAL_FORM);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [foto, setFoto] = useState<string | null>(null);
+  const [carnet, setCarnet] = useState<CarnetListo | null>(null);
 
   const calculateAge = (birthDate: string): number => {
     const today = new Date();
@@ -89,6 +129,9 @@ const HazteSocio = () => {
 
     setLoading(true);
     try {
+      const nombre = form.nombre.trim();
+      const apellidos = `${form.primer_apellido.trim()} ${form.segundo_apellido.trim()}`.trim();
+      const fotoCarnet = foto;
       const numeroSocio = await sociosService.create({
         nombre: form.nombre.trim(),
         primer_apellido: form.primer_apellido.trim(),
@@ -108,11 +151,14 @@ const HazteSocio = () => {
         telefono_tutor: form.telefono_tutor.trim() || undefined,
       });
 
-      toast({
-        title: "Alta completada",
-        description: `Bienvenido/a. Tu número de socio es el ${numeroSocio}.`,
+      setCarnet({
+        nombre,
+        apellidos,
+        numero: numeroDesdeAlta(numeroSocio),
+        foto: fotoCarnet,
       });
       setForm(INITIAL_FORM);
+      setFoto(null);
       setErrors({});
     } catch (err: any) {
       toast({
@@ -143,6 +189,19 @@ const HazteSocio = () => {
     { key: "telefono", label: "Teléfono", type: "tel" },
     { key: "telefono_tutor", label: "Teléfono del tutor (opcional)", type: "tel" },
   ];
+
+  const elegirFoto = async (file?: File) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Elige una imagen", variant: "destructive" });
+      return;
+    }
+    try {
+      setFoto(await leerFoto(file));
+    } catch (err: any) {
+      toast({ title: "No se pudo usar la foto", description: err.message, variant: "destructive" });
+    }
+  };
 
   return (
     <main className="pt-32 md:pt-40 min-h-screen bg-background">
@@ -175,6 +234,39 @@ const HazteSocio = () => {
             ))}
           </div>
 
+          <div className="mt-6 rounded-xl border border-dashed border-border p-4">
+            <Label className="text-sm font-semibold text-primary">Foto (opcional)</Label>
+            <p className="mt-1 text-xs text-muted-foreground">Si no eliges foto, el carnet llevará la oca del club.</p>
+            <div className="mt-3 flex items-center gap-4">
+              {foto ? (
+                <img src={foto} alt="Foto para el carnet" className="h-20 w-20 rounded-full object-cover border-2 border-primary" />
+              ) : (
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary text-[10px] font-heading uppercase tracking-wider text-primary-foreground">
+                  Oca
+                </div>
+              )}
+              <div className="flex flex-col gap-2">
+                <label className="inline-flex h-10 cursor-pointer items-center justify-center rounded-md bg-primary px-4 font-heading text-sm uppercase tracking-wider text-primary-foreground">
+                  Elegir foto
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    onChange={(e) => {
+                      void elegirFoto(e.target.files?.[0]);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+                {foto && (
+                  <button type="button" onClick={() => setFoto(null)} className="text-left text-xs font-semibold text-secondary">
+                    Quitar foto
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
           <Button
             type="submit"
             disabled={loading}
@@ -184,6 +276,15 @@ const HazteSocio = () => {
           </Button>
         </form>
       </div>
+      {carnet && (
+        <CarnetSocio
+          nombre={carnet.nombre}
+          apellidos={carnet.apellidos}
+          numero={carnet.numero}
+          foto={carnet.foto}
+          onClose={() => setCarnet(null)}
+        />
+      )}
     </main>
   );
 };
