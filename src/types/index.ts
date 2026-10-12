@@ -42,6 +42,9 @@ export interface ClienteDatos {
   dni: string;
   email: string;
   telefono: string;
+  es_socio?: boolean;
+  numero_socio?: string;
+  observaciones?: string;
 }
 
 export interface ArticuloPedido {
@@ -66,9 +69,13 @@ export interface Producto {
   nombre: string;
   descripcion: string;
   precio: number;
+  precioSocio: number;
+  precioNoSocio: number;
   imagen: string;
   tallas: string[];
   categoria: string;
+  incluye?: string[];
+  seleccionarMedias?: boolean;
 }
 
 export interface Socio {

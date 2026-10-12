@@ -51,7 +51,18 @@ const OrdersTab = ({ pedidos, onRefresh }: OrdersTabProps) => {
           <tbody>
             {filtered.map((p) => (
               <tr key={p.id} className="border-t border-border hover:bg-muted/50 transition-colors">
-                <td className="px-4 py-3 font-semibold text-primary">{p.cliente_datos.nombre} {p.cliente_datos.apellidos}</td>
+                <td className="px-4 py-3">
+                  <div className="font-semibold text-primary">{p.cliente_datos.nombre} {p.cliente_datos.apellidos}</div>
+                  <div className="text-xs text-muted-foreground">{p.cliente_datos.email}</div>
+                  <div className="text-xs text-muted-foreground">{p.cliente_datos.telefono}</div>
+                  {typeof p.cliente_datos.es_socio === "boolean" && (
+                    <div className="text-xs font-semibold text-primary mt-1">
+                      {p.cliente_datos.es_socio
+                        ? `Socio${p.cliente_datos.numero_socio ? ` nº ${p.cliente_datos.numero_socio}` : ""}`
+                        : "No socio"}
+                    </div>
+                  )}
+                </td>
                 <td className="px-4 py-3 text-muted-foreground">{p.cliente_datos.dni}</td>
                 <td className="px-4 py-3 text-muted-foreground">{p.articulos_pedido.map((a) => `${a.nombre} (${a.talla} x${a.cantidad})`).join(", ")}</td>
                 <td className="px-4 py-3 font-heading font-bold text-secondary">{p.total_estimado.toFixed(2)} €</td>

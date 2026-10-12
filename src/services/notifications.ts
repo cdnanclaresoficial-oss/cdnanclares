@@ -1,5 +1,7 @@
-const RESEND_API_KEY = import.meta.env.VITE_RESEND_API_KEY || "re_J1pXpoGb_AHqimjKBgxT96rQMjBXyzSL1";
-const CLUB_EMAIL = "cdnanclares@gmail.com";
+import type { ArticuloPedido, ClienteDatos } from "@/types";
+
+const RESEND_API_KEY = import.meta.env.VITE_RESEND_API_KEY || "";
+export const CLUB_EMAIL = "cdnanclares.oficial@gmail.com";
 
 function buildEmailTemplate(title: string, body: string): string {
   return `
@@ -62,20 +64,67 @@ export async function notifyNewPlayer(nombre: string, apellidos: string, email: 
   await sendEmail(email, "Confirmación de Inscripción - C.D. Nanclares", buildEmailTemplate("Inscripción Confirmada", confirmBody));
 }
 
-export async function notifyNewOrder(clienteNombre: string, clienteEmail: string, total: number) {
-  const body = `
-    <p>Nuevo pedido recibido:</p>
-    <table style="width: 100%; border-collapse: collapse;">
-      <tr><td style="padding: 8px; font-weight: bold;">Cliente:</td><td style="padding: 8px;">${clienteNombre}</td></tr>
-      <tr style="background: #f5f5f5;"><td style="padding: 8px; font-weight: bold;">Total:</td><td style="padding: 8px;">${total.toFixed(2)} €</td></tr>
-    </table>
-  `;
-  await sendEmail(CLUB_EMAIL, `Nuevo Pedido de ${clienteNombre}`, buildEmailTemplate("Nuevo Pedido", body));
+function euros(valor: number) {
+  return new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(valor);
+}
 
-  const confirmBody = `
-    <p>Hola <strong>${clienteNombre}</strong>,</p>
-    <p>Hemos recibido tu pedido correctamente. El total estimado es de <strong>${total.toFixed(2)} €</strong>.</p>
-    <p>Te avisaremos cuando esté preparado para recoger.</p>
-  `;
-  await sendEmail(clienteEmail, "Confirmación de Pedido - C.D. Nanclares", buildEmailTemplate("Pedido Confirmado", confirmBody));
+export async function notifyNewOrder(pedido: {
+  cliente: ClienteDatos;
+  articulos: ArticuloPedido[];
+  total: number;
+}) {
+  const { cliente, articulos, total } = pedido;
+  const socio = cliente.es_socio
+    ? `Sí${cliente.numero_socio ? ` (nº ${cliente.numero_socio})` : ""}`
+    : "No";
+  const lineas = articulos
+    .map(
+      (a) =>
+        `• ${a.nombre} | Talla ${a.talla} | ${a.cantidad} ud. × ${euros(a.precio)} = ${euros(a.precio * a.cantidad)}`,
+    )
+    .join("\n");
+  const texto = [
+    "Nuevo pedido de la tienda oficial del C.D. Nanclares.",
+    "",
+    `Cliente: ${cliente.nombre} ${cliente.apellidos}`,
+    `Email: ${cliente.email}`,
+    `Teléfono: ${cliente.telefono}`,
+    `DNI: ${cliente.dni}`,
+    `Socio: ${socio}`,
+    "",
+    "Artículos:",
+    lineas,
+    "",
+    `TOTAL: ${euros(total)}`,
+    cliente.observaciones ? `\nObservaciones: ${cliente.observaciones}` : "",
+    "",
+    "El pago se realiza al recoger el pedido en el club.",
+  ].join("\n");
+
+  const res = await fetch(`https://formsubmit.co/ajax/${CLUB_EMAIL}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({
+      _subject: `Pedido tienda — ${cliente.nombre} ${cliente.apellidos} — ${euros(total)}`,
+      _template: "box",
+      _captcha: "false",
+      _replyto: cliente.email,
+      _autoresponse: `Hola ${cliente.nombre}, el C.D. Nanclares ha recibido tu pedido de equipación (${euros(total)}). Te avisaremos cuando puedas recogerlo en el club. El pago se hace en la recogida.`,
+      nombre: `${cliente.nombre} ${cliente.apellidos}`,
+      email: cliente.email,
+      telefono: cliente.telefono,
+      dni: cliente.dni,
+      socio,
+      total: euros(total),
+      pedido: texto,
+    }),
+  });
+
+  const data = await res.json().catch(() => ({} as { success?: string | boolean; message?: string }));
+  if (!res.ok || (data.success !== true && data.success !== "true")) {
+    throw new Error(data.message || "No se ha podido enviar el aviso del pedido por email.");
+  }
 }
