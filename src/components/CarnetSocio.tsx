@@ -335,15 +335,17 @@ async function pintarCarnet(canvas: HTMLCanvasElement, datos: DatosCarnet) {
   }
 
   const nombre = `${datos.nombre} ${datos.apellidos}`.replace(/\s+/g, " ").trim().toUpperCase();
+  const xNombre = 68;
+  const maxNombre = 520;
   let tamanoNombre = 58;
-  ctx.font = `700 ${tamanoNombre}px "Cinzel Decorative", serif`;
   ctx.letterSpacing = "3px";
-  const maxNombre = 620;
-  while (tamanoNombre > 36 && ctx.measureText(nombre).width > maxNombre * 1.7) {
+  ctx.font = `700 ${tamanoNombre}px "Cinzel Decorative", serif`;
+  let lineas = lineasDe(ctx, nombre, maxNombre);
+  while (tamanoNombre > 28 && lineas.some((linea) => ctx.measureText(linea).width > maxNombre)) {
     tamanoNombre -= 2;
     ctx.font = `700 ${tamanoNombre}px "Cinzel Decorative", serif`;
+    lineas = lineasDe(ctx, nombre, maxNombre);
   }
-  const lineas = lineasDe(ctx, nombre, maxNombre);
   const altoLinea = tamanoNombre + 16;
   const yNombre = foto ? fotoY + fotoLado + 118 : 300;
   textoConSombra(ctx, () => {
@@ -352,7 +354,7 @@ async function pintarCarnet(canvas: HTMLCanvasElement, datos: DatosCarnet) {
     ctx.letterSpacing = "3px";
     ctx.textAlign = "left";
     lineas.forEach((linea, i) => {
-      ctx.fillText(linea, fotoX, yNombre + i * altoLinea);
+      ctx.fillText(linea, xNombre, yNombre + i * altoLinea);
     });
     ctx.letterSpacing = "0px";
   });
@@ -362,8 +364,8 @@ async function pintarCarnet(canvas: HTMLCanvasElement, datos: DatosCarnet) {
   ctx.strokeStyle = "#f0c14d";
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(fotoX, yLinea);
-  ctx.lineTo(fotoX + 240, yLinea);
+  ctx.moveTo(xNombre, yLinea);
+  ctx.lineTo(xNombre + 220, yLinea);
   ctx.stroke();
 
   let yBloque = yLinea + 18;
