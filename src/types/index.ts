@@ -9,7 +9,21 @@ export type Posicion =
   | "Extremo Izquierdo"
   | "Delantero Centro";
 
-export type Categoria = "Prebenjamín" | "Benjamín" | "Alevín" | "Infantil" | "Cadete" | "Juvenil" | "Senior" | "Veteranos";
+export const CATEGORIAS = [
+  "Escuela",
+  "Benjamín",
+  "Alevín",
+  "Infantil",
+  "Infantil femenino",
+  "Cadete",
+  "Cadete femenino",
+  "Juvenil",
+  "Senior",
+  "Senior femenino",
+  "Veteranos",
+] as const;
+
+export type Categoria = (typeof CATEGORIAS)[number];
 
 export type EstadoJugador = "Activo" | "Baja";
 

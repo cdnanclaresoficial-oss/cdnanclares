@@ -7,10 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import PlayerSheet from "./PlayerSheet";
-import type { FichaJugador } from "@/types";
+import { CATEGORIAS, type FichaJugador } from "@/types";
 
 const POSICIONES = ["Portero", "Defensa Central", "Lateral Derecho", "Lateral Izquierdo", "Mediocentro", "Mediapunta", "Extremo Derecho", "Extremo Izquierdo", "Delantero Centro"];
-const CATEGORIAS = ["Prebenjamín", "Benjamín", "Alevín", "Infantil", "Cadete", "Juvenil", "Senior", "Veteranos"];
 
 interface PlayersTabProps {
   jugadores: FichaJugador[];

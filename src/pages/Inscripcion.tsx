@@ -8,11 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { Check, Camera } from "lucide-react";
-import type { Posicion, Categoria } from "@/types";
+import { CATEGORIAS, type Posicion } from "@/types";
 import { z } from "zod";
 
 const POSICIONES: Posicion[] = ["Portero", "Defensa Central", "Lateral Derecho", "Lateral Izquierdo", "Mediocentro", "Mediapunta", "Extremo Derecho", "Extremo Izquierdo", "Delantero Centro"];
-const CATEGORIAS: Categoria[] = ["Prebenjamín", "Benjamín", "Alevín", "Infantil", "Cadete", "Juvenil", "Senior", "Veteranos"];
 
 const steps = ["Datos Personales", "Datos Físicos", "Club", "Confirmación"];
 

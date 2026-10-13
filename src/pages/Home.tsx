@@ -12,7 +12,7 @@ import {
 
 const infoItems = [
   { icon: "🏟️", title: "Historia", key: "info_historia", fallback: "Más de 60 años formando deportistas en Nanclares de la Oca." },
-  { icon: "⚽", title: "Cantera", key: "info_cantera", fallback: "Categorías desde Prebenjamín hasta Senior y Veteranos." },
+  { icon: "⚽", title: "Cantera", key: "info_cantera", fallback: "Categorías desde Escuela hasta Senior y Veteranos, también en femenino." },
   { icon: "🤝", title: "Comunidad", key: "info_comunidad", fallback: "Un club abierto a todos, donde el deporte une a familias." },
 ];
 

@@ -4,9 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, LineChart, Line, ResponsiveContainer } from "recharts";
 import { Users, UserCheck, ShoppingBag, TrendingUp } from "lucide-react";
-import type { FichaJugador, PedidoRopa, Categoria } from "@/types";
-
-const CATEGORIAS: Categoria[] = ["Prebenjamín", "Benjamín", "Alevín", "Infantil", "Cadete", "Juvenil", "Senior", "Veteranos"];
+import { CATEGORIAS, type FichaJugador, type PedidoRopa } from "@/types";
 const PIE_COLORS = ["hsl(142, 71%, 45%)", "hsl(45, 93%, 47%)", "hsl(0, 72%, 51%)"];
 const BAR_COLOR = "hsl(var(--primary))";
 

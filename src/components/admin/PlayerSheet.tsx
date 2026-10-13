@@ -9,10 +9,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Camera } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { fichasService, supabase } from "@/lib/supabase";
-import type { FichaJugador, Posicion, Categoria, EstadoJugador } from "@/types";
+import { CATEGORIAS, type FichaJugador, type Posicion, type EstadoJugador } from "@/types";
 
 const POSICIONES: Posicion[] = ["Portero", "Defensa Central", "Lateral Derecho", "Lateral Izquierdo", "Mediocentro", "Mediapunta", "Extremo Derecho", "Extremo Izquierdo", "Delantero Centro"];
-const CATEGORIAS: Categoria[] = ["Prebenjamín", "Benjamín", "Alevín", "Infantil", "Cadete", "Juvenil", "Senior", "Veteranos"];
 
 interface PlayerSheetProps {
   player: FichaJugador | null;
