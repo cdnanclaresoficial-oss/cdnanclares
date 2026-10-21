@@ -111,6 +111,9 @@
   .gradient-navy {
     background: linear-gradient(135deg, hsl(220 70% 12%) 0%, hsl(220 70% 22%) 100%);
   }
+  .gradient-blaugrana {
+    background: linear-gradient(100deg, hsl(220 75% 16%) 0%, hsl(220 70% 24%) 40%, hsl(345 70% 30%) 80%, hsl(350 75% 36%) 100%);
+  }
   .gradient-red {
     background: linear-gradient(135deg, hsl(355 85% 42%) 0%, hsl(355 85% 55%) 100%);
   }
