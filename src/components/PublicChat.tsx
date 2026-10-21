@@ -13,7 +13,7 @@ interface Message {
 }
 
 interface PublicChatProps {
-  autoOpen?: boolean;
+  showTeaser?: boolean;
   personalityKey?: string;
   mode?: "publico" | "tienda" | "club";
   welcomeMessage?: string;
@@ -45,7 +45,7 @@ const FACTUAL_GUARDRAILS = [
 ].join(" ");
 
 const PublicChat = ({
-  autoOpen = false,
+  showTeaser = false,
   personalityKey = "asistente_personalidad",
   mode = "publico",
   welcomeMessage = "¡Hola! Soy el asistente del C.D. Nanclares. ¿En qué puedo ayudarte?",
@@ -53,18 +53,17 @@ const PublicChat = ({
   assistantSubtitle = "Asistente virtual",
   includeShopCatalog = false,
 }: PublicChatProps) => {
-  const [open, setOpen] = useState(autoOpen);
+  const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     { role: "assistant", content: welcomeMessage },
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showAutoCloseNotice, setShowAutoCloseNotice] = useState(false);
+  const [teaserVisible, setTeaserVisible] = useState(false);
   const [personality, setPersonality] = useState<string | null>(null);
   const [shopCatalogContext, setShopCatalogContext] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const userInteractedRef = useRef(false);
 
   useEffect(() => {
     const fetchPersonality = async () => {
@@ -105,35 +104,18 @@ const PublicChat = ({
   }, [messages, loading]);
 
   useEffect(() => {
-    if (!open) return;
-    userInteractedRef.current = false;
-    setShowAutoCloseNotice(false);
-
-    const noticeTimeoutId = setTimeout(() => {
-      if (!userInteractedRef.current) {
-        setShowAutoCloseNotice(true);
-      }
-    }, 5000);
-
-    const timeoutId = setTimeout(() => {
-      if (!userInteractedRef.current) {
-        setOpen(false);
-        setExpanded(false);
-        setShowAutoCloseNotice(false);
-      }
-    }, 10000);
-
+    if (!showTeaser) return;
+    const showId = setTimeout(() => setTeaserVisible(true), 1500);
+    const hideId = setTimeout(() => setTeaserVisible(false), 8000);
     return () => {
-      clearTimeout(noticeTimeoutId);
-      clearTimeout(timeoutId);
+      clearTimeout(showId);
+      clearTimeout(hideId);
     };
-  }, [open]);
+  }, [showTeaser]);
 
   const handleSend = useCallback(async () => {
     const text = input.trim();
     if (!text || loading) return;
-    userInteractedRef.current = true;
-    setShowAutoCloseNotice(false);
     setMessages((prev) => [...prev, { role: "user", content: text }]);
     setInput("");
     setLoading(true);
@@ -180,13 +162,23 @@ const PublicChat = ({
 
   if (!open) {
     return (
-      <button
-        onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-50 h-16 w-16 rounded-full bg-primary shadow-xl flex items-center justify-center hover:scale-110 transition-transform ring-4 ring-primary/20"
-        aria-label="Abrir chat"
-      >
-        <img src={logoCdn} alt="CDN" className="h-10 w-10 rounded-full object-cover" />
-      </button>
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
+        {teaserVisible && (
+          <button
+            onClick={() => setOpen(true)}
+            className="max-w-[220px] rounded-2xl rounded-br-sm bg-card px-3 py-2 text-left text-sm text-foreground shadow-lg border border-border animate-in fade-in slide-in-from-bottom-2 duration-300"
+          >
+            ¿Te ayudo en algo?
+          </button>
+        )}
+        <button
+          onClick={() => setOpen(true)}
+          className="h-16 w-16 rounded-full bg-primary shadow-xl flex items-center justify-center hover:scale-110 transition-transform ring-4 ring-primary/20"
+          aria-label="Abrir chat"
+        >
+          <img src={logoCdn} alt="CDN" className="h-10 w-10 rounded-full object-cover" />
+        </button>
+      </div>
     );
   }
 
@@ -208,7 +200,6 @@ const PublicChat = ({
         <div className="flex items-center gap-1">
           <button
             onClick={() => {
-              userInteractedRef.current = true;
               setExpanded(!expanded);
             }}
             className="text-primary-foreground/60 hover:text-primary-foreground transition-colors p-1"
@@ -224,16 +215,6 @@ const PublicChat = ({
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3 scroll-smooth">
-        {showAutoCloseNotice && (
-          <div className="rounded-xl border-2 border-amber-500 bg-amber-300 px-4 py-3 text-center font-heading shadow-[0_0_14px_rgba(251,191,36,0.9)]">
-            <p className="text-sm md:text-base font-extrabold text-black leading-tight">
-              No te molesto mas, si quieres algo aqui me tienes !
-            </p>
-            <p className="mt-1 text-xs md:text-sm font-bold text-black">
-              Este chat se cerrara en unos segundos
-            </p>
-          </div>
-        )}
         {messages.map((m, i) => (
           <div key={i} className={`flex gap-2.5 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
             {m.role === "assistant" && (
@@ -289,7 +270,6 @@ const PublicChat = ({
         <Input
           value={input}
           onChange={(e) => {
-            userInteractedRef.current = true;
             setInput(e.target.value);
           }}
           onKeyDown={(e) => e.key === "Enter" && handleSend()}

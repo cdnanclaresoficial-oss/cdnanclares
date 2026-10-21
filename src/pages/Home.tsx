@@ -238,7 +238,7 @@ const Home = () => {
         </p>
       </footer>
 
-      <PublicChat autoOpen />
+      <PublicChat showTeaser />
     </main>
   );
 };

@@ -16,13 +16,13 @@ const Navbar = () => {
   const location = useLocation();
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 gradient-navy shadow-lg">
-      <div className="container mx-auto flex items-center justify-between px-4 py-3">
-        <Link to="/" className="flex items-center gap-3">
-          <img src={logoCdn} alt="C.D. Nanclares" className="h-16 w-16 sm:h-36 sm:w-36 rounded-full object-cover border-2 border-secondary" />
-          <div className="hidden sm:block">
-            <span className="font-heading text-3xl font-bold text-primary-foreground tracking-wide">C.D. NANCLARES</span>
-            <span className="block text-base text-muted-foreground/70">de la Oca</span>
+    <nav className="fixed top-0 left-0 right-0 z-50 gradient-blaugrana shadow-lg">
+      <div className="container mx-auto flex items-center justify-between px-4 py-2 sm:py-3">
+        <Link to="/" className="flex items-center gap-2 sm:gap-3">
+          <img src={logoCdn} alt="C.D. Nanclares" className="h-12 w-12 sm:h-36 sm:w-36 rounded-full object-cover border-2 border-secondary" />
+          <div>
+            <span className="block font-heading text-xl sm:text-3xl font-bold leading-tight text-primary-foreground tracking-wide">C.D. NANCLARES</span>
+            <span className="block text-xs sm:text-base text-primary-foreground/70">de la Oca</span>
           </div>
         </Link>
 
@@ -78,7 +78,7 @@ const Navbar = () => {
 
       {/* Mobile menu */}
       {open && (
-        <div className="md:hidden gradient-navy border-t border-white/10 pb-4">
+        <div className="md:hidden border-t border-white/10 pb-4">
           <div className="border-t border-white/10 mt-2 pt-2">
             {navLinks.map((l) => {
               const isActive = location.pathname === l.to;
@@ -95,7 +95,7 @@ const Navbar = () => {
                         ? "bg-secondary text-secondary-foreground"
                         : "text-primary-foreground bg-white/10"
                       : isActive
-                        ? "text-secondary bg-white/10"
+                        ? "text-primary-foreground bg-white/15 font-bold"
                         : "text-primary-foreground/80 hover:bg-white/5"
                   }`}
                 >
